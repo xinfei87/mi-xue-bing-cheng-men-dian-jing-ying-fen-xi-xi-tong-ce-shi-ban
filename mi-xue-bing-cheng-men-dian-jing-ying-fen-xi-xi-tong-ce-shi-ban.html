@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>蜜雪冰城门店经营分析系统测试版</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #faf7f5;
+        --surface: #ffffff;
+        --surface-alt: #f4edea;
+        --text: #211d1b;
+        --dim: #6f6560;
+        --border: #e8dfda;
+        --accent: #d92323;
+        --accent-strong: #b91c1c;
+        --accent-soft: #fdeeee;
+        --good: #1b7a4d;
+        --good-soft: #e7f4ec;
+        --bad: #c22626;
+        --bad-soft: #fdeeee;
+        --warn: #b7791f;
+        --warn-soft: #faf1de;
+        --radius: 12px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #17120f;
+          --surface: #221c18;
+          --surface-alt: #2b2320;
+          --text: #f3ece8;
+          --dim: #a89a93;
+          --border: #3a2f2a;
+          --accent: #f05555;
+          --accent-strong: #f05555;
+          --accent-soft: #3d2121;
+          --good: #4cc38a;
+          --good-soft: #1d3328;
+          --bad: #f07575;
+          --bad-soft: #3d2121;
+          --warn: #e2a63d;
+          --warn-soft: #3a2f1a;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-text-size-adjust: 100%;
+      }
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+      input, select, textarea { font-variant-numeric: tabular-nums; font-family: inherit; }
+      .wrap { max-width: 960px; margin: 0 auto; padding: 0 14px 48px; }
+
+      /* 测试版横幅 */
+      .test-banner {
+        background: var(--accent);
+        color: #fff;
+        text-align: center;
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: .02em;
+        padding: 10px 12px;
+      }
+      .test-banner small { display: block; font-weight: 400; font-size: 12.5px; opacity: .92; margin-top: 2px; }
+
+      /* 顶部行 */
+      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0 4px; flex-wrap: wrap; }
+      .who { font-size: 13.5px; color: var(--dim); }
+      .who b { color: var(--text); }
+      .role-tag { display: inline-block; background: var(--accent-soft); color: var(--accent-strong); border-radius: 999px; padding: 1px 9px; font-size: 12px; margin-left: 6px; font-weight: 600; }
+
+      /* 页签 */
+      .tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 0 14px; }
+      .tab {
+        border: 1px solid var(--border); background: var(--surface); color: var(--text);
+        border-radius: 999px; padding: 6px 14px; font-size: 14px; cursor: pointer; min-height: 2.25rem;
+      }
+      .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+      /* 卡片与排版 */
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+      .card h2 { font-size: 17px; margin: 0 0 4px; }
+      .card h3 { font-size: 15.5px; margin: 0 0 8px; }
+      .card .sub { color: var(--dim); font-size: 13px; margin: 0 0 10px; }
+      .conclusion { background: var(--surface-alt); border-radius: 8px; padding: 10px 12px; font-size: 14px; margin: 0 0 12px; }
+      .empty { text-align: center; color: var(--dim); padding: 34px 18px; }
+      .empty p { margin: 0 0 14px; }
+
+      .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+      @media (min-width: 640px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
+      .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+      .kpi .k-label { font-size: 12.5px; color: var(--dim); margin-bottom: 2px; }
+      .kpi .k-value { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .kpi .k-delta { font-size: 12.5px; margin-top: 2px; }
+      .up { color: var(--good); } .down { color: var(--bad); } .flat { color: var(--dim); }
+
+      /* 表格 */
+      .tbl-wrap { overflow-x: auto; }
+      table { border-collapse: collapse; width: 100%; font-size: 14px; }
+      th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+      th:first-child, td:first-child { text-align: left; }
+      thead th { color: var(--dim); font-weight: 600; font-size: 13px; }
+      tr.total td { font-weight: 700; border-top: 2px solid var(--border); }
+      tr.hl td { font-weight: 700; background: var(--accent-soft); }
+      .badge { display: inline-block; font-size: 12px; border-radius: 999px; padding: 1px 9px; background: var(--surface-alt); color: var(--dim); }
+      .badge.warn { background: var(--warn-soft); color: var(--warn); font-weight: 600; }
+      .badge.good { background: var(--good-soft); color: var(--good); font-weight: 600; }
+
+      /* 占比条 */
+      .bar-row { display: grid; grid-template-columns: 76px 1fr 92px; align-items: center; gap: 8px; margin: 6px 0; font-size: 13.5px; }
+      .bar-track { background: var(--surface-alt); border-radius: 999px; height: 10px; overflow: hidden; }
+      .bar-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+      .bar-fill.dim { background: var(--dim); opacity: .55; }
+      .bar-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--dim); font-size: 12.5px; }
+
+      /* 表单 */
+      .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+      @media (min-width: 640px) { .form-grid { grid-template-columns: repeat(3, 1fr); } }
+      .field label { display: block; font-size: 13px; color: var(--dim); margin-bottom: 4px; }
+      .field input, .field select, .field textarea {
+        width: 100%; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+        color: var(--text); padding: 8px 10px; font-size: 15px;
+      }
+      .field.full { grid-column: 1 / -1; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+      .row .field { flex: 1 1 140px; }
+
+      .btn {
+        border: 1px solid var(--border); background: var(--surface); color: var(--text);
+        border-radius: 9px; padding: 8px 16px; font-size: 14.5px; cursor: pointer; min-height: 2.5rem;
+      }
+      .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+      .btn.small { padding: 4px 12px; min-height: 2.25rem; font-size: 13.5px; }
+      .btn.danger { color: var(--bad); border-color: var(--bad); background: transparent; }
+      .btn:disabled { opacity: .5; cursor: not-allowed; }
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+      .msg { font-size: 13.5px; margin-top: 10px; min-height: 20px; }
+      .msg.ok { color: var(--good); } .msg.err { color: var(--bad); }
+
+      /* 登录 */
+      .login-wrap { max-width: 430px; margin: 0 auto; padding: 26px 14px 48px; }
+      .login-card {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 14px 16px; margin-bottom: 10px; cursor: pointer; width: 100%; text-align: left; color: var(--text);
+      }
+      .login-card .lc-name { font-size: 16px; font-weight: 700; }
+      .login-card .lc-desc { font-size: 13px; color: var(--dim); }
+      .login-card .lc-go { color: var(--accent-strong); font-weight: 600; font-size: 14px; white-space: nowrap; }
+      .divider { text-align: center; color: var(--dim); font-size: 13px; margin: 16px 0 12px; }
+
+      /* 导出弹窗 */
+      .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; justify-content: center; z-index: 50; }
+      .modal-mask.open { display: flex; }
+      .modal { background: var(--surface); color: var(--text); width: 100%; max-width: 640px; max-height: 86vh; overflow: auto; border-radius: 16px 16px 0 0; padding: 18px 16px 26px; }
+      @media (min-width: 640px) { .modal-mask { align-items: center; } .modal { border-radius: 16px; } }
+      .modal h3 { margin: 0 0 6px; font-size: 16px; }
+      .modal textarea { width: 100%; height: 180px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 12px; background: var(--surface-alt); color: var(--text); }
+      .hint { font-size: 13px; color: var(--dim); }
+      .note-line { font-size: 13px; color: var(--dim); margin-top: 8px; }
+      svg text { font-family: inherit; }
+    </style>
+  </head>
+  <body>
+    <div class="test-banner">测试版 · 已载入万华城店 8 月真实数据<small>这是公开测试链接，数据只保存在这台设备的浏览器里，换设备或清缓存就没了；和正式版不互通</small></div>
+
+    <!-- 登录 -->
+    <div id="loginView" class="login-wrap" hidden>
+      <div class="card">
+        <h2>登录测试版</h2>
+        <p class="sub">点下面的账号卡片直接进入，不用输密码。账号密码就写在卡片上，不会变。</p>
+        <button class="login-card" id="quickAdmin" type="button">
+          <span><span class="lc-name">管理员</span><br /><span class="lc-desc">账号 111 · 密码 111 · 能登记、看报表、管账号</span></span>
+          <span class="lc-go">点此进入 ›</span>
+        </button>
+        <button class="login-card" id="quickUser" type="button">
+          <span><span class="lc-name">普通用户</span><br /><span class="lc-desc">账号 222 · 密码 222 · 能登记、看报表，不管账号</span></span>
+          <span class="lc-go">点此进入 ›</span>
+        </button>
+        <div class="divider">— 或者用账号密码登录 —</div>
+        <div class="field" style="margin-bottom:10px"><label for="loginUser">账号</label><input id="loginUser" autocomplete="username" /></div>
+        <div class="field"><label for="loginPass">密码</label><input id="loginPass" type="password" autocomplete="current-password" /></div>
+        <div class="actions"><button class="btn primary" id="loginBtn" type="button">登录</button></div>
+        <div class="msg err" id="loginMsg"></div>
+      </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="appView" hidden>
+      <div class="wrap">
+        <div class="topbar">
+          <div class="who">当前账号：<b id="whoName"></b><span class="role-tag" id="whoRole"></span></div>
+          <button class="btn small" id="logoutBtn" type="button">退出登录</button>
+        </div>
+        <nav class="tabs" id="tabBar" aria-label="功能页签"></nav>
+        <main id="tabBody"></main>
+      </div>
+    </div>
+
+    <!-- 导出弹窗 -->
+    <div class="modal-mask" id="exportMask">
+      <div class="modal" role="dialog" aria-label="导出报表">
+        <h3 id="exportTitle">导出</h3>
+        <p class="hint">点「下载 CSV 文件」保存到手机或电脑，Excel 直接能打开。如果手机浏览器拦住了下载、文件没下来，就点「复制全部内容」，粘贴到 Excel 或备忘录里也一样。</p>
+        <textarea id="exportText" readonly></textarea>
+        <div class="actions">
+          <button class="btn primary" id="exportDownload" type="button">下载 CSV 文件</button>
+          <button class="btn" id="exportCopy" type="button">复制全部内容</button>
+          <button class="btn" id="exportClose" type="button">关闭</button>
+        </div>
+        <div class="msg" id="exportMsg"></div>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      /* ================= 数据层（localStorage） ================= */
+      var LS_KEY = "mxbc_test_v1";
+      var CHANNELS = [
+        { key: "salesCash", label: "现金" }, { key: "salesWechat", label: "微信" },
+        { key: "salesAlipay", label: "支付宝" }, { key: "salesMiniprogram", label: "小程序" },
+        { key: "salesMeituan", label: "美团外卖" }, { key: "salesEleme", label: "饿了么" },
+        { key: "salesJd", label: "京东外卖" }, { key: "salesGroupbuy", label: "团购" },
+        { key: "salesOtherChannel", label: "其他渠道" }
+      ];
+      var EXPENSES = [
+        { key: "purchaseCost", label: "进货" }, { key: "wages", label: "工资" },
+        { key: "rent", label: "房租" }, { key: "utilities", label: "水电" },
+        { key: "maintenance", label: "维修" }, { key: "hqFees", label: "总部费用" },
+        { key: "otherExpense", label: "其他支出" }
+      ];
+      var CARD_IN = ["扫码到账", "小程序到账", "外卖结算", "团购结算", "现金存入", "其他收入", "个人往来"];
+      var CARD_OUT = ["进货付款", "工资发放", "水电缴纳", "房租", "管理费", "维修", "其他支出", "分红", "个人往来"];
+
+      function seedUsers() {
+        return [
+          { id: "u1", username: "111", password: "111", role: "admin", active: true },
+          { id: "u2", username: "222", password: "222", role: "user", active: true }
+        ];
+      }
+      function blankDB() {
+        return { stores: [], daily: [], monthly: [], products: [], cards: {}, txs: [], recons: {}, users: seedUsers(), settings: { laborRateLimit: 25 }, session: null };
+      }
+      var db;
+      function load() {
+        try {
+          var raw = localStorage.getItem(LS_KEY);
+          db = raw ? JSON.parse(raw) : blankDB();
+        } catch (e) { db = blankDB(); }
+        if (!db.users || !db.users.length) db.users = seedUsers();
+        if (!db.settings) db.settings = { laborRateLimit: 25 };
+        ["stores", "daily", "monthly", "products", "txs"].forEach(function (k) { if (!db[k]) db[k] = []; });
+        if (!db.cards) db.cards = {};
+        if (!db.recons) db.recons = {};
+      }
+      function save() { try { localStorage.setItem(LS_KEY, JSON.stringify(db)); } catch (e) {} }
+      function uid() { return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+      /* ================= 工具 ================= */
+      function $(id) { return document.getElementById(id); }
+      function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+      function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+      function money(n) { return "¥" + Number(n || 0).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+      function money0(n) { return "¥" + Math.round(Number(n || 0)).toLocaleString("zh-CN"); }
+      function pct(n) { return n == null || !isFinite(n) ? "—" : (n * 100).toFixed(1) + "%"; }
+      function pp(n) { return n == null || !isFinite(n) ? "—" : (n >= 0 ? "+" : "") + (n * 100).toFixed(1) + " 个百分点"; }
+      function pad2(n) { return (n < 10 ? "0" : "") + n; }
+      function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+      function yesterdayStr() { var d = new Date(); d.setDate(d.getDate() - 1); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+      function curMonth() { return todayStr().slice(0, 7); }
+      function prevMonth(m) { var y = +m.slice(0, 4), mo = +m.slice(5, 7) - 1; if (mo === 0) { y--; mo = 12; } return y + "-" + pad2(mo); }
+      function nextMonth(m) { var y = +m.slice(0, 4), mo = +m.slice(5, 7) + 1; if (mo === 13) { y++; mo = 1; } return y + "-" + pad2(mo); }
+      function monthLabel(m) { return m.slice(0, 4) + " 年 " + (+m.slice(5, 7)) + " 月"; }
+      function deltaHtml(cur, prv, invert) {
+        if (prv == null) return '<span class="flat">无上月数据</span>';
+        var d = cur - prv;
+        if (Math.abs(d) < 0.005) return '<span class="flat">和上月基本持平</span>';
+        var good = invert ? d < 0 : d > 0;
+        return '<span class="' + (good ? "up" : "down") + '">' + (d > 0 ? "▲" : "▼") + " " + money0(Math.abs(d)) + " 环比</span>";
+      }
+
+      /* ================= 经营数据计算 ================= */
+      function storeById(id) { return db.stores.find(function (s) { return s.id === id; }) || null; }
+      function dailyOf(storeId, month) {
+        return db.daily.filter(function (d) { return d.storeId === storeId && d.date.slice(0, 7) === month; })
+          .sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+      }
+      function monthlyRec(storeId, month) { return db.monthly.find(function (r) { return r.storeId === storeId && r.month === month; }) || null; }
+      function sumDays(days) {
+        var f = { sales: 0, purchaseCost: 0, otherIncome: 0, wages: 0, rent: 0, utilities: 0, maintenance: 0, hqFees: 0, otherExpense: 0, orders: 0 };
+        CHANNELS.forEach(function (c) { f[c.key] = 0; });
+        days.forEach(function (d) {
+          CHANNELS.forEach(function (c) { f[c.key] += num(d[c.key]); f.sales += num(d[c.key]); });
+          EXPENSES.forEach(function (e) { f[e.key] += num(d[e.key]); });
+          f.otherIncome += num(d.otherIncome); f.orders += num(d.orderCount);
+          f.purchaseCost = f.purchaseCost; /* purchaseCost 已在 EXPENSES 中累计 */
+        });
+        return f;
+      }
+      /* 某店某月的有效经营数据：有日登记则按日汇总，人数/工时取月度记录；否则用月度记录 */
+      function effMonth(storeId, month) {
+        var days = dailyOf(storeId, month);
+        var rec = monthlyRec(storeId, month);
+        if (days.length) {
+          var s = sumDays(days);
+          return {
+            sales: s.sales, purchaseCost: s.purchaseCost, otherIncome: s.otherIncome, wages: s.wages,
+            rent: s.rent, utilities: s.utilities, maintenance: s.maintenance, hqFees: s.hqFees, otherExpense: s.otherExpense,
+            headcount: rec ? num(rec.headcount) : 0, hours: rec ? num(rec.hours) : 0,
+            source: "日登记汇总（" + days.length + " 天）", hasData: true, days: days, channelSums: s
+          };
+        }
+        if (rec) {
+          return {
+            sales: num(rec.sales), purchaseCost: num(rec.purchaseCost), otherIncome: num(rec.otherIncome), wages: num(rec.wages),
+            rent: num(rec.rent), utilities: num(rec.utilities), maintenance: num(rec.maintenance), hqFees: num(rec.hqFees), otherExpense: num(rec.otherExpense),
+            headcount: num(rec.headcount), hours: num(rec.hours),
+            source: "月度录入", hasData: true, days: [], channelSums: null
+          };
+        }
+        return { sales: 0, purchaseCost: 0, otherIncome: 0, wages: 0, rent: 0, utilities: 0, maintenance: 0, hqFees: 0, otherExpense: 0, headcount: 0, hours: 0, source: "无数据", hasData: false, days: [], channelSums: null };
+      }
+      function derived(f) {
+        var gross = f.sales - f.purchaseCost;
+        var fees = f.wages + f.rent + f.utilities + f.maintenance + f.hqFees + f.otherExpense;
+        var net = gross + f.otherIncome - fees;
+        return {
+          gross: gross, fees: fees, totalOut: f.purchaseCost + fees, net: net,
+          grossRate: f.sales ? gross / f.sales : null, netRate: f.sales ? net / f.sales : null,
+          laborRate: f.sales ? f.wages / f.sales : null, purchaseRate: f.sales ? f.purchaseCost / f.sales : null,
+          utilityRate: f.sales ? f.utilities / f.sales : null
+        };
+      }
+      function monthsWithData(storeId) {
+        var set = {};
+        db.daily.forEach(function (d) { if (d.storeId === storeId) set[d.date.slice(0, 7)] = 1; });
+        db.monthly.forEach(function (r) { if (r.storeId === storeId) set[r.month] = 1; });
+        return Object.keys(set).sort();
+      }
+
+      /* ================= 卡账单计算 ================= */
+      function cardOf(storeId) { return db.cards[storeId] || null; }
+      function txsOf(storeId) {
+        return db.txs.filter(function (t) { return t.storeId === storeId; })
+          .sort(function (a, b) { return a.date === b.date ? (a.createdAt - b.createdAt) : (a.date < b.date ? -1 : 1); });
+      }
+      /* 截止某日期（含）的系统余额；在途/待查项不计入 */
+      function balanceAt(storeId, uptoDate) {
+        var card = cardOf(storeId); if (!card) return null;
+        var bal = num(card.openBalance);
+        txsOf(storeId).forEach(function (t) {
+          if (t.kind === "adjustment") return;
+          if (uptoDate && t.date > uptoDate) return;
+          bal += t.dir === "in" ? num(t.amount) : -num(t.amount);
+        });
+        return bal;
+      }
+      function monthEndDate(month) { return month + "-31"; /* 比较用字符串即可：任何当月日期都 <= month-31 */ }
+
+      /* ================= 全局界面状态 ================= */
+      var ui = { tab: "overview", storeId: null, month: curMonth(), dailyDate: yesterdayStr(), dailyMonth: curMonth(), cardMonth: curMonth(), entryMonth: curMonth(), prodMonth: curMonth() };
+      function curStoreId() {
+        if (ui.storeId && storeById(ui.storeId)) return ui.storeId;
+        return db.stores.length ? db.stores[0].id : null;
+      }
+      function currentUser() { return db.users.find(function (u) { return u.id === (db.session && db.session.userId); }) || null; }
+
+      var TABS = [
+        { key: "overview", label: "总览" }, { key: "analysis", label: "分析" },
+        { key: "daily", label: "日登记" }, { key: "statement", label: "月利润表" },
+        { key: "card", label: "卡账单" }, { key: "labor", label: "人效" },
+        { key: "products", label: "品项盈亏" }, { key: "entry", label: "录入数据" },
+        { key: "account", label: "账号" }
+      ];
+
+      /* ================= 渲染框架 ================= */
+      function renderTabs() {
+        $("tabBar").innerHTML = TABS.map(function (t) {
+          return '<button type="button" class="tab' + (ui.tab === t.key ? " active" : "") + '" data-tab="' + t.key + '">' + t.label + "</button>";
+        }).join("");
+        Array.prototype.forEach.call($("tabBar").querySelectorAll("[data-tab]"), function (b) {
+          b.addEventListener("click", function () { ui.tab = b.getAttribute("data-tab"); render(); });
+        });
+      }
+      function render() {
+        var user = currentUser();
+        if (!user) { $("loginView").hidden = false; $("appView").hidden = true; return; }
+        $("loginView").hidden = true; $("appView").hidden = false;
+        $("whoName").textContent = user.username;
+        $("whoRole").textContent = user.role === "admin" ? "管理员" : "普通用户";
+        renderTabs();
+        var body = $("tabBody");
+        var fn = { overview: viewOverview, analysis: viewAnalysis, daily: viewDaily, statement: viewStatement, card: viewCard, labor: viewLabor, products: viewProducts, entry: viewEntry, account: viewAccount }[ui.tab] || viewOverview;
+        body.innerHTML = fn();
+        var bind = { overview: bindOverview, analysis: bindAnalysis, daily: bindDaily, statement: bindStatement, card: bindCard, labor: bindLabor, products: bindProducts, entry: bindEntry, account: bindAccount }[ui.tab];
+        if (bind) bind();
+      }
+      function storeSelectHtml(id, selId) {
+        if (!db.stores.length) return "";
+        return '<div class="field"><label for="' + id + '">门店</label><select id="' + id + '">' +
+          db.stores.map(function (s) { return '<option value="' + s.id + '"' + (s.id === selId ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("") + "</select></div>";
+      }
+      function monthInputHtml(id, val) {
+        return '<div class="field"><label for="' + id + '">月份</label><input id="' + id + '" type="month" value="' + esc(val) + '" /></div>';
+      }
+      function emptyStoreHtml() {
+        return '<div class="card empty"><p>还没有门店。先去「录入数据」添加一家门店，之后就能按店、按日期登记销售和支出。</p><button class="btn primary" type="button" onclick="goTab(\'entry\')">去添加门店</button></div>';
+      }
+      function goTab(t) { ui.tab = t; render(); }
+      function noDataCard(month) {
+        return '<div class="card empty"><p>' + monthLabel(month) + ' 还没有数据。去「日登记」记上几天的销售，或者在「录入数据」里补一条月度记录，这里就会出报表。</p></div>';
+      }
+      function barRows(items, total) {
+        return items.filter(function (i) { return i.amount > 0; }).map(function (i) {
+          var share = total ? i.amount / total : 0;
+          return '<div class="bar-row"><span>' + esc(i.label) + '</span><span class="bar-track"><span class="bar-fill" style="display:block;width:' + Math.max(1.5, share * 100) + '%"></span></span><span class="bar-val">' + money0(i.amount) + " · " + pct(share) + "</span></div>";
+        }).join("") || '<p class="sub">暂无数据</p>';
+      }
+      /* 简单 SVG 柱状图：values 为 [{label, value}] */
+      function barChart(values, color) {
+        if (!values.length) return '<p class="sub">暂无数据</p>';
+        var max = Math.max.apply(null, values.map(function (v) { return v.value; }).concat([1]));
+        var W = 640, H = 150, base = 118, bw = Math.min(38, (W - 20) / values.length - 8);
+        var step = (W - 20) / values.length;
+        var s = '<svg viewBox="0 0 ' + W + " " + H + '" style="width:100%;height:auto" role="img" aria-label="柱状图">';
+        s += '<line x1="8" y1="' + base + '" x2="' + (W - 8) + '" y2="' + base + '" stroke="var(--border)" stroke-width="1.5"/>';
+        values.forEach(function (v, i) {
+          var h = Math.max(2, v.value / max * (base - 26));
+          var x = 10 + i * step + (step - bw) / 2;
+          s += '<rect x="' + x.toFixed(1) + '" y="' + (base - h).toFixed(1) + '" width="' + bw + '" height="' + h.toFixed(1) + '" rx="3" fill="' + (color || "var(--accent)") + '"/>';
+          s += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (base - h - 5).toFixed(1) + '" text-anchor="middle" font-size="10.5" fill="var(--dim)">' + Math.round(v.value).toLocaleString("zh-CN") + "</text>";
+          s += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (base + 16) + '" text-anchor="middle" font-size="10.5" fill="var(--dim)">' + esc(v.label) + "</text>";
+        });
+        return s + "</svg>";
+      }
+
+      /* ================= 总览 ================= */
+      function viewOverview() {
+        var sid = curStoreId();
+        if (!sid) return emptyStoreHtml();
+        var f = effMonth(sid, ui.month), d = derived(f);
+        var pf = effMonth(sid, prevMonth(ui.month)), pd = derived(pf);
+        var hasPrev = pf.hasData;
+        var html = '<div class="card"><div class="row">' + storeSelectHtml("ovStore", sid) + monthInputHtml("ovMonth", ui.month) +
+          '<div class="field"><label>&nbsp;</label><button class="btn" type="button" id="ovExport">导出月报表 CSV</button></div></div></div>';
+        if (!f.hasData) return html + noDataCard(ui.month);
+        html += '<div class="kpis">' +
+          kpi("销售收入", money0(f.sales), deltaHtml(f.sales, hasPrev ? pf.sales : null)) +
+          kpi("净利润", money0(d.net), deltaHtml(d.net, hasPrev ? pd.net : null)) +
+          kpi("毛利率", pct(d.grossRate), hasPrev ? '<span class="flat">上月 ' + pct(pd.grossRate) + "，" + pp(d.grossRate - pd.grossRate) + "</span>" : '<span class="flat">无上月数据</span>') +
+          kpi("人工成本率", pct(d.laborRate), laborRateNote(d.laborRate)) +
+          "</div>";
+        html += '<div class="card"><h2>' + monthLabel(ui.month) + " 经营小结</h2><p class=\"sub\">数据来源：" + esc(f.source) + "</p><p>" + overviewConclusion(sid, ui.month, f, d, pf, pd) + "</p></div>";
+        /* 近 6 个月走势 */
+        var months = monthsWithData(sid).filter(function (m) { return m <= ui.month; }).slice(-6);
+        if (months.length > 1) {
+          html += '<div class="card"><h3>近几个月销售与净利润</h3>' + barChart(months.map(function (m) { var mf = effMonth(sid, m); return { label: m.slice(5) + "月", value: mf.sales }; })) +
+            '<div class="tbl-wrap"><table><thead><tr><th>月份</th><th>销售收入</th><th>净利润</th><th>净利率</th></tr></thead><tbody>' +
+            months.slice().reverse().map(function (m) { var mf = effMonth(sid, m), md = derived(mf); return "<tr><td>" + monthLabel(m) + "</td><td>" + money(mf.sales) + "</td><td>" + money(md.net) + "</td><td>" + pct(md.netRate) + "</td></tr>"; }).join("") +
+            "</tbody></table></div></div>";
+        }
+        /* 多店对比 */
+        if (db.stores.length > 1) {
+          var rows = db.stores.map(function (s) { var sf = effMonth(s.id, ui.month), sd = derived(sf); return { name: s.name, f: sf, d: sd }; })
+            .sort(function (a, b) { return b.d.net - a.d.net; });
+          html += '<div class="card"><h3>多店对比（' + monthLabel(ui.month) + '）</h3><div class="tbl-wrap"><table><thead><tr><th>门店</th><th>销售收入</th><th>净利润</th><th>毛利率</th><th>人工成本率</th></tr></thead><tbody>' +
+            rows.map(function (r) { return "<tr><td>" + esc(r.name) + "</td><td>" + money(r.f.sales) + "</td><td>" + money(r.d.net) + "</td><td>" + pct(r.d.grossRate) + "</td><td>" + pct(r.d.laborRate) + "</td></tr>"; }).join("") +
+            "</tbody></table></div></div>";
+        }
+        return html;
+      }
+      function kpi(label, value, delta) { return '<div class="kpi"><div class="k-label">' + label + '</div><div class="k-value">' + value + '</div><div class="k-delta">' + delta + "</div></div>"; }
+      function laborRateNote(rate) {
+        if (rate == null) return '<span class="flat">—</span>';
+        var limit = num(db.settings.laborRateLimit) / 100;
+        if (rate > limit) return '<span class="down">超过上限 ' + db.settings.laborRateLimit + "%，留意人工</span>";
+        return '<span class="up">在上限 ' + db.settings.laborRateLimit + "% 以内</span>";
+      }
+      function overviewConclusion(sid, month, f, d, pf, pd) {
+        var parts = [];
+        parts.push(monthLabel(month) + "销售 " + money0(f.sales) + "，净利润 " + money0(d.net) + "，净利率 " + pct(d.netRate) + "。");
+        if (pf.hasData) {
+          var dn = d.net - pd.net;
+          if (Math.abs(dn) >= 0.005) {
+            var drivers = [
+              { label: "销售", v: (f.sales - pf.sales) }, { label: "进货", v: -(f.purchaseCost - pf.purchaseCost) },
+              { label: "工资", v: -(f.wages - pf.wages) }, { label: "水电", v: -(f.utilities - pf.utilities) },
+              { label: "其他收入", v: f.otherIncome - pf.otherIncome }, { label: "其他支出", v: -(f.otherExpense - pf.otherExpense) }
+            ].sort(function (a, b) { return Math.abs(b.v) - Math.abs(a.v); });
+            var top = drivers[0];
+            parts.push("比上月" + (dn >= 0 ? "多赚 " : "少赚 ") + money0(Math.abs(dn)) + "，影响最大的是" + top.label + "（" + (top.v >= 0 ? "+" : "−") + money0(Math.abs(top.v)) + "）。");
+          } else parts.push("净利润和上月基本持平。");
+        }
+        if (d.laborRate != null && d.laborRate > num(db.settings.laborRateLimit) / 100) parts.push("人工成本率 " + pct(d.laborRate) + " 已超过设定的 " + db.settings.laborRateLimit + "% 上限，重点看一下排班和人效。");
+        return parts.join("");
+      }
+      function bindOverview() {
+        var s = $("ovStore"); if (s) s.addEventListener("change", function () { ui.storeId = s.value; render(); });
+        var m = $("ovMonth"); if (m) m.addEventListener("change", function () { if (m.value) { ui.month = m.value; render(); } });
+        var e = $("ovExport"); if (e) e.addEventListener("click", function () { openExport("月报表", buildMonthlyCsv()); });
+      }
+
+      /* ================= 分析 ================= */
+      function trendPoints(sid, month, pick) {
+        var ms = monthsWithData(sid).filter(function (m) { return m <= month; }).slice(-6);
+        return ms.map(function (m) { return { month: m, f: effMonth(sid, m) }; }).map(function (x) { return { label: x.month.slice(5) + "月", value: pick(x.f, derived(x.f)) }; });
+      }
+      function viewAnalysis() {
+        var sid = curStoreId();
+        if (!sid) return emptyStoreHtml();
+        var month = ui.month, f = effMonth(sid, month), d = derived(f);
+        var pf = effMonth(sid, prevMonth(month)), pd = derived(pf);
+        var head = '<div class="card"><div class="row">' + storeSelectHtml("anStore", sid) + monthInputHtml("anMonth", month) +
+          '<div class="field"><label>&nbsp;</label><button class="btn" type="button" id="anExport">导出分析汇总 CSV</button></div></div></div>';
+        if (!f.hasData) return head + noDataCard(month);
+        var html = head + '<div class="kpis">' +
+          kpi("净利润", money0(d.net), deltaHtml(d.net, pf.hasData ? pd.net : null)) +
+          kpi("销售收入", money0(f.sales), deltaHtml(f.sales, pf.hasData ? pf.sales : null)) +
+          kpi("毛利率", pct(d.grossRate), pf.hasData ? '<span class="flat">' + pp(d.grossRate - pd.grossRate) + " 环比</span>" : '<span class="flat">无上月数据</span>') +
+          kpi("人工成本率", pct(d.laborRate), laborRateNote(d.laborRate)) + "</div>";
+
+        /* 1 销售分析 */
+        var salesBody = "";
+        if (f.channelSums) {
+          var cs = f.channelSums;
+          var items = CHANNELS.map(function (c) { return { label: c.label, amount: num(cs[c.key]) }; }).sort(function (a, b) { return b.amount - a.amount; });
+          var delivery = num(cs.salesMeituan) + num(cs.salesEleme) + num(cs.salesJd);
+          var dineIn = f.sales - delivery - num(cs.salesGroupbuy);
+          var best = null, worst = null;
+          f.days.forEach(function (day) { var t = CHANNELS.reduce(function (a, c) { return a + num(day[c.key]); }, 0); if (!best || t > best.v) best = { date: day.date, v: t }; if (!worst || t < worst.v) worst = { date: day.date, v: t }; });
+          salesBody = barRows(items, f.sales) +
+            '<p class="note-line">外卖（美团+饿了么+京东）占 ' + pct(f.sales ? delivery / f.sales : null) + " · 团购占 " + pct(f.sales ? num(cs.salesGroupbuy) / f.sales : null) + " · 到店占 " + pct(f.sales ? dineIn / f.sales : null) + "</p>" +
+            "<h3 style=\"margin-top:14px\">日销售走势</h3>" + barChart(f.days.map(function (day) { return { label: day.date.slice(8), value: CHANNELS.reduce(function (a, c) { return a + num(day[c.key]); }, 0) }; })) +
+            '<p class="note-line">已登记 ' + f.days.length + " 天，日均 " + money0(f.sales / Math.max(1, f.days.length)) + (best ? "；最好一天 " + best.date + "（" + money0(best.v) + "），最差一天 " + worst.date + "（" + money0(worst.v) + "）" : "") + "。</p>";
+          var topCh = items[0];
+          salesBody = '<p class="conclusion">卖得最多的是' + esc(topCh.label) + "，" + money0(topCh.amount) + "，占销售 " + pct(f.sales ? topCh.amount / f.sales : null) + "。</p>" + salesBody;
+        } else {
+          salesBody = '<p class="conclusion">这个月是月度录入，没有分渠道数据。' + (pf.hasData ? "销售比上月" + (f.sales >= pf.sales ? "多了 " : "少了 ") + money0(Math.abs(f.sales - pf.sales)) + "。" : "") + '想看渠道占比，用「日登记」按天记销售即可。</p>';
+        }
+        html += '<div class="card"><h2>销售分析</h2>' + salesBody + "</div>";
+
+        /* 2 人工分析 */
+        var laborBody = '<p class="conclusion">' + laborConclusion(f, d) + "</p>" +
+          '<div class="tbl-wrap"><table><tbody>' +
+          "<tr><td>工资总额</td><td>" + money(f.wages) + "</td></tr>" +
+          "<tr><td>人工成本率</td><td>" + pct(d.laborRate) + "（上限 " + db.settings.laborRateLimit + "%）</td></tr>" +
+          "<tr><td>工资占费用比（不含进货）</td><td>" + pct(d.fees ? f.wages / d.fees : null) + "</td></tr>" +
+          (f.headcount ? "<tr><td>人均销售额</td><td>" + money(f.sales / f.headcount) + "（" + f.headcount + " 人）</td></tr><tr><td>人均工资</td><td>" + money(f.wages / f.headcount) + "</td></tr>" : "<tr><td>人均数据</td><td>未填人数，去「录入数据」补月度记录的人数/工时</td></tr>") +
+          "</tbody></table></div><h3 style=\"margin-top:14px\">人工成本率走势</h3>" +
+          barChart(trendPoints(sid, month, function (ff, dd) { return dd.laborRate ? dd.laborRate * 100 : 0; }), "var(--dim)") + '<p class="note-line">柱子数字是百分比（%）。</p>';
+        html += '<div class="card"><h2>人工分析</h2>' + laborBody + "</div>";
+
+        /* 3 水电分析 */
+        var utilBody = '<p class="conclusion">' + utilConclusion(f, d, pf, pd) + "</p>" +
+          '<div class="tbl-wrap"><table><tbody><tr><td>水电费</td><td>' + money(f.utilities) + "</td></tr><tr><td>水电占销售额</td><td>" + pct(d.utilityRate) + "</td></tr>" +
+          (f.sales ? "<tr><td>每万元销售水电费</td><td>" + money(f.utilities / f.sales * 10000) + "</td></tr>" : "") + "</tbody></table></div>" +
+          '<h3 style="margin-top:14px">水电费走势</h3>' + barChart(trendPoints(sid, month, function (ff) { return ff.utilities; }), "var(--dim)");
+        html += '<div class="card"><h2>水电分析</h2>' + utilBody + "</div>";
+
+        /* 4 进货与毛利 */
+        var grossBody = '<p class="conclusion">' + grossConclusion(f, d, pf, pd) + "</p>" +
+          '<div class="tbl-wrap"><table><tbody><tr><td>进货成本</td><td>' + money(f.purchaseCost) + "</td></tr><tr><td>进货成本率</td><td>" + pct(d.purchaseRate) + "</td></tr><tr><td>毛利</td><td>" + money(d.gross) + "</td></tr><tr><td>毛利率</td><td>" + pct(d.grossRate) + (pf.hasData ? "（环比 " + pp(d.grossRate - pd.grossRate) + "）" : "") + "</td></tr></tbody></table></div>" +
+          '<h3 style="margin-top:14px">毛利率走势</h3>' + barChart(trendPoints(sid, month, function (ff, dd) { return dd.grossRate ? dd.grossRate * 100 : 0; }), "var(--dim)") + '<p class="note-line">柱子数字是百分比（%）。</p>';
+        html += '<div class="card"><h2>进货与毛利</h2>' + grossBody + "</div>";
+
+        /* 5 费用结构 */
+        var feeItems = EXPENSES.map(function (e) { return { label: e.label, amount: num(f[e.key]) }; }).sort(function (a, b) { return b.amount - a.amount; });
+        var feeBody = '<p class="conclusion">总支出 ' + money0(d.totalOut) + "，最大的一项是" + esc(feeItems[0].label) + "，" + money0(feeItems[0].amount) + "，占总支出 " + pct(d.totalOut ? feeItems[0].amount / d.totalOut : null) + "。</p>" +
+          barRows(feeItems, d.totalOut) +
+          '<h3 style="margin-top:14px">总支出走势</h3>' + barChart(trendPoints(sid, month, function (ff, dd) { return dd.totalOut; }), "var(--dim)");
+        html += '<div class="card"><h2>费用结构</h2>' + feeBody + "</div>";
+        return html;
+      }
+      function laborConclusion(f, d) {
+        if (d.laborRate == null) return "暂无销售数据，算不出人工成本率。";
+        var limit = num(db.settings.laborRateLimit) / 100;
+        if (d.laborRate > limit) return "人工成本率 " + pct(d.laborRate) + "，超过设定的 " + db.settings.laborRateLimit + "% 上限。工资 " + money0(f.wages) + "，先看排班人数和人效，别急着砍人。";
+        return "人工成本率 " + pct(d.laborRate) + "，在设定的 " + db.settings.laborRateLimit + "% 上限以内，人工暂时没失控。";
+      }
+      function utilConclusion(f, d, pf, pd) {
+        if (!pf.hasData) return "水电费 " + money0(f.utilities) + "，占销售额 " + pct(d.utilityRate) + "。还没有上月数据，下个月就能看环比了。";
+        var du = f.utilities - pf.utilities, ds = f.sales - pf.sales;
+        var s = "水电费 " + money0(f.utilities) + "，比上月" + (du >= 0 ? "多 " : "少 ") + money0(Math.abs(du)) + "；同期销售" + (ds >= 0 ? "多了 " : "少了 ") + money0(Math.abs(ds)) + "。";
+        if (du > 0 && ds <= 0) s += "销售没涨水电涨了，查一下冰箱空调有没有跑冒滴漏。";
+        else if (du > 0 && ds > 0) s += "销售涨水电也涨，方向一致，再看水电占销售额的比例有没有变高。";
+        else s += "水电控制得不错。";
+        return s;
+      }
+      function grossConclusion(f, d, pf, pd) {
+        var s = "毛利率 " + pct(d.grossRate) + "，进货成本率 " + pct(d.purchaseRate) + "。";
+        if (pf.hasData && pd.grossRate != null && d.grossRate != null) {
+          var diff = d.grossRate - pd.grossRate;
+          if (Math.abs(diff) >= 0.005) s += "比上月" + (diff > 0 ? "高了 " : "低了 ") + Math.abs(diff * 100).toFixed(1) + " 个百分点" + (diff < 0 ? "，看看是不是促销多了、损耗大了或者进货涨价了。" : "，保持住。");
+          else s += "和上月基本持平。";
+        }
+        return s;
+      }
+      function bindAnalysis() {
+        var s = $("anStore"); if (s) s.addEventListener("change", function () { ui.storeId = s.value; render(); });
+        var m = $("anMonth"); if (m) m.addEventListener("change", function () { if (m.value) { ui.month = m.value; render(); } });
+        var e = $("anExport"); if (e) e.addEventListener("click", function () { openExport("分析汇总", buildAnalysisCsv()); });
+      }
+
+      /* ================= 日登记 ================= */
+      function dayRecord(storeId, date) { return db.daily.find(function (d) { return d.storeId === storeId && d.date === date; }) || null; }
+      function viewDaily() {
+        var sid = curStoreId();
+        if (!sid) return emptyStoreHtml();
+        var date = ui.dailyDate;
+        var rec = dayRecord(sid, date);
+        var v = function (k) { return rec && num(rec[k]) ? String(num(rec[k])) : ""; };
+        var fields = CHANNELS.map(function (c) { return fieldNum("df_" + c.key, c.label, v(c.key)); }).join("") +
+          EXPENSES.map(function (e) { return fieldNum("df_" + e.key, e.label, v(e.key)); }).join("") +
+          fieldNum("df_otherIncome", "其他收入", v("otherIncome")) +
+          fieldNum("df_orderCount", "订单量（单，可不填）", v("orderCount"));
+        var days = dailyOf(sid, ui.dailyMonth);
+        var listHtml = days.length ? '<div class="tbl-wrap"><table><thead><tr><th>日期</th><th>销售合计</th><th>支出合计</th><th>备注</th><th></th></tr></thead><tbody>' +
+          days.slice().reverse().map(function (day) {
+            var st = CHANNELS.reduce(function (a, c) { return a + num(day[c.key]); }, 0);
+            var et = EXPENSES.reduce(function (a, e) { return a + num(day[e.key]); }, 0);
+            return "<tr><td>" + day.date + '</td><td>' + money(st) + "</td><td>" + money(et) + "</td><td>" + esc(day.note || "") + '</td><td><button class="btn small" type="button" data-editday="' + day.date + '">改</button> <button class="btn small danger" type="button" data-delday="' + day.id + '">删</button></td></tr>';
+          }).join("") + "</tbody></table></div>" : '<p class="sub">这个月还没有登记记录。</p>';
+        return '<div class="card"><h2>日登记</h2><p class="sub">选店、选日期，把当天的销售按渠道填进来，再顺手记当天的支出和有没有其他收入。工资、水电按归属月记：发工资那天，日期选工资归属月的最后一天。</p>' +
+          '<div class="row">' + storeSelectHtml("dfStore", sid) +
+          '<div class="field"><label for="dfDate">日期</label><input id="dfDate" type="date" value="' + esc(date) + '" /></div></div>' +
+          (rec ? '<p><span class="badge good">这一天已经登记过，保存会覆盖修改</span></p>' : "") +
+          '<h3 style="margin-top:12px">销售（按渠道）</h3><div class="form-grid">' + fields.split(fieldNum("df_purchaseCost", "进货", v("purchaseCost")))[0] + "</div>" +
+          '<h3 style="margin-top:16px">支出与其他</h3><div class="form-grid">' +
+          EXPENSES.map(function (e) { return fieldNum("df_" + e.key, e.label, v(e.key)); }).join("") +
+          fieldNum("df_otherIncome", "其他收入", v("otherIncome")) + fieldNum("df_orderCount", "订单量（单，可不填）", v("orderCount")) + "</div>" +
+          '<div class="field full" style="margin-top:10px"><label for="dfNote">备注</label><input id="dfNote" value="' + esc(rec ? rec.note || "" : "") + '" placeholder="比如：8 月工资记在 8 月 31 日" /></div>' +
+          '<div class="actions"><button class="btn primary" type="button" id="dfSave">保存这一天</button></div><div class="msg" id="dfMsg"></div></div>' +
+          '<div class="card"><h3>' + monthLabel(ui.dailyMonth) + ' 已登记 ' + days.length + ' 天</h3><div class="row" style="margin-bottom:10px">' + monthInputHtml("dfListMonth", ui.dailyMonth) +
+          '<div class="field"><label>&nbsp;</label><button class="btn" type="button" id="dfExport">导出日登记明细 CSV</button></div></div>' + listHtml + "</div>";
+      }
+      function fieldNum(id, label, val) {
+        return '<div class="field"><label for="' + id + '">' + label + '</label><input id="' + id + '" type="number" inputmode="decimal" step="0.01" min="0" value="' + esc(val) + '" /></div>';
+      }
+      function bindDaily() {
+        var sid = curStoreId(); if (!sid) return;
+        var s = $("dfStore"); if (s) s.addEventListener("change", function () { ui.storeId = s.value; render(); });
+        var dt = $("dfDate"); if (dt) dt.addEventListener("change", function () { if (dt.value) { ui.dailyDate = dt.value; ui.dailyMonth = dt.value.slice(0, 7); render(); } });
+        var lm = $("dfListMonth"); if (lm) lm.addEventListener("change", function () { if (lm.value) { ui.dailyMonth = lm.value; render(); } });
+        var sv = $("dfSave");
+        if (sv) sv.addEventListener("click", function () {
+          var rec = { storeId: sid, date: ui.dailyDate, note: $("dfNote").value.trim() };
+          CHANNELS.concat(EXPENSES).forEach(function (c) { rec[c.key] = num($("df_" + c.key).value); });
+          rec.otherIncome = num($("df_otherIncome").value); rec.orderCount = num($("df_orderCount").value);
+          var old = dayRecord(sid, ui.dailyDate);
+          if (old) { rec.id = old.id; db.daily = db.daily.map(function (d) { return d.id === old.id ? rec : d; }); }
+          else { rec.id = uid(); db.daily.push(rec); }
+          ui.dailyMonth = ui.dailyDate.slice(0, 7);
+          save(); render();
+          var msg = $("dfMsg"); if (msg) { msg.className = "msg ok"; msg.textContent = ui.dailyDate + " 的登记已保存，月报表会按日登记自动汇总。"; }
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-editday]"), function (b) {
+          b.addEventListener("click", function () { ui.dailyDate = b.getAttribute("data-editday"); render(); window.scrollTo(0, 0); });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-delday]"), function (b) {
+          b.addEventListener("click", function () {
+            db.daily = db.daily.filter(function (d) { return d.id !== b.getAttribute("data-delday"); });
+            save(); render();
+          });
+        });
+        var ex = $("dfExport"); if (ex) ex.addEventListener("click", function () { openExport("日登记明细", buildDailyCsv()); });
+      }
+
+      /* ================= 月利润表 ================= */
+      function viewStatement() {
+        var sid = curStoreId();
+        if (!sid) return emptyStoreHtml();
+        var month = ui.month, f = effMonth(sid, month), d = derived(f);
+        var head = '<div class="card"><div class="row">' + storeSelectHtml("stStore", sid) + monthInputHtml("stMonth", month) +
+          '<div class="field"><label>&nbsp;</label><button class="btn" type="button" id="stExport">导出月报表 CSV</button></div></div></div>';
+        if (!f.hasData) return head + noDataCard(month);
+        var pf = effMonth(sid, prevMonth(month)), pd = derived(pf);
+        /* 环比列 */
+        function srow(label, val, pval, cls) {
+          return '<tr' + (cls ? ' class="' + cls + '"' : "") + "><td>" + label + "</td><td>" + money(val) + "</td>" + (pf.hasData ? "<td>" + signedMoney(val - pval) + "</td>" : "") + "</tr>";
+        }
+        var tbl = '<div class="card"><h2>' + esc(storeById(sid).name) + " · " + monthLabel(month) + ' 利润表</h2><p class="sub">经营账（权责口径）：看这个月赚了多少。数据来源：' + esc(f.source) + '。<span class="badge">' + esc(f.source) + "</span></p>" +
+          '<div class="tbl-wrap"><table><thead><tr><th>项目</th><th>本月</th>' + (pf.hasData ? "<th>比上月</th>" : "") + "</tr></thead><tbody>" +
+          srow("销售收入", f.sales, pf.sales) +
+          srow("减：进货成本", f.purchaseCost, pf.purchaseCost) +
+          srow("毛利", d.gross, pd.gross, "total") +
+          srow("加：其他收入", f.otherIncome, pf.otherIncome) +
+          srow("减：工资", f.wages, pf.wages) +
+          srow("减：房租", f.rent, pf.rent) +
+          srow("减：水电", f.utilities, pf.utilities) +
+          srow("减：维修", f.maintenance, pf.maintenance) +
+          srow("减：总部费用", f.hqFees, pf.hqFees) +
+          srow("减：其他支出", f.otherExpense, pf.otherExpense) +
+          srow("净利润", d.net, pd.net, "hl") +
+          "</tbody></table></div>" +
+          '<p class="note-line">毛利率 ' + pct(d.grossRate) + " · 净利率 " + pct(d.netRate) + " · 人工成本率 " + pct(d.laborRate) + "</p>" +
+          attributionHtml(f, d, pf, pd) + "</div>";
+        return head + tbl + bridgeHtml(sid, month, d);
+      }
+      function signedMoney(n) { if (Math.abs(n) < 0.005) return "—"; return (n > 0 ? "+" : "−") + money0(Math.abs(n)); }
+      function attributionHtml(f, d, pf, pd) {
+        if (!pf.hasData) return "";
+        var items = [
+          { label: "销售收入", v: f.sales - pf.sales }, { label: "进货成本", v: -(f.purchaseCost - pf.purchaseCost) },
+          { label: "其他收入", v: f.otherIncome - pf.otherIncome }, { label: "工资", v: -(f.wages - pf.wages) },
+          { label: "房租", v: -(f.rent - pf.rent) }, { label: "水电", v: -(f.utilities - pf.utilities) },
+          { label: "维修", v: -(f.maintenance - pf.maintenance) }, { label: "总部费用", v: -(f.hqFees - pf.hqFees) },
+          { label: "其他支出", v: -(f.otherExpense - pf.otherExpense) }
+        ].filter(function (i) { return Math.abs(i.v) >= 0.005; }).sort(function (a, b) { return Math.abs(b.v) - Math.abs(a.v); });
+        if (!items.length) return '<h3 style="margin-top:14px">环比归因</h3><p class="sub">各项和上月都一样。</p>';
+        var dn = d.net - pd.net;
+        return '<h3 style="margin-top:14px">环比归因：净利润比上月' + (dn >= 0 ? "多 " : "少 ") + money0(Math.abs(dn)) + "</h3>" +
+          items.map(function (i) { return '<div class="bar-row"><span>' + i.label + '</span><span class="bar-track"><span class="bar-fill' + (i.v < 0 ? " dim" : "") + '" style="display:block;width:' + Math.min(100, Math.abs(i.v) / Math.max(1, Math.abs(items[0].v)) * 100) + '%"></span></span><span class="bar-val">' + signedMoney(i.v) + "</span></div>"; }).join("") +
+          '<p class="note-line">正数是把利润往上拉的，负数是往下拖的。</p>';
+      }
+      function bridgeHtml(sid, month, d) {
+        var card = cardOf(sid);
+        if (!card) return '<div class="card"><h3>利润 → 卡余额</h3><p class="sub">还没给这家店设卡账单期初。去「卡账单」设好期初余额后，这里会把净利润和卡上钱的变动对起来。</p></div>';
+        var start = balanceAt(sid, prevMonth(month) + "-31");
+        var end = balanceAt(sid, monthEndDate(month));
+        if (start == null || end == null) return "";
+        var change = end - start;
+        var gap = change - d.net;
+        return '<div class="card"><h3>利润 → 卡余额（' + monthLabel(month) + '）</h3>' +
+          '<div class="tbl-wrap"><table><tbody>' +
+          "<tr><td>本月净利润（经营账）</td><td>" + money(d.net) + "</td></tr>" +
+          "<tr><td>本月卡余额实际变动（资金账）</td><td>" + money(change) + "</td></tr>" +
+          '<tr class="total"><td>两者差额</td><td>' + money(gap) + "</td></tr>" +
+          "</tbody></table></div>" +
+          '<p class="note-line">差额是正常的：房租、管理费按年交、按月摊销；工资水电记账月份和打款月份不同；分红、个人往来只走卡不进利润；外卖到账有几天时差。差额会一直如实挂在这里，不会抹平；具体每一笔去「卡账单」对。</p></div>';
+      }
+      function bindStatement() {
+        var s = $("stStore"); if (s) s.addEventListener("change", function () { ui.storeId = s.value; render(); });
+        var m = $("stMonth"); if (m) m.addEventListener("change", function () { if (m.value) { ui.month = m.value; render(); } });
+        var e = $("stExport"); if (e) e.addEventListener("click", function () { openExport("月报表", buildMonthlyCsv()); });
+      }
+
+      /* ================= 卡账单 ================= */
+      function viewCard() {
+        var sid = curStoreId();
+        if (!sid) return emptyStoreHtml();
+        var card = cardOf(sid);
+        var head = '<div class="card"><div class="row">' + storeSelectHtml("cdStore", sid) + "</div></div>";
+        if (!card) {
+          return head + '<div class="card"><h2>先设期初</h2><p class="sub">资金账（收付口径）：看卡上有多少钱。比如从 11 月开始记，就填 10 月 31 日那天卡里的余额，之后的流水都从这个数往上滚。</p>' +
+            '<div class="row"><div class="field"><label for="cdOpenDate">期初日期</label><input id="cdOpenDate" type="date" value="' + prevMonth(curMonth()) + '-01" /></div>' +
+            '<div class="field"><label for="cdTail">银行卡尾号（可不填）</label><input id="cdTail" placeholder="比如 1234" /></div>' +
+            '<div class="field"><label for="cdOpenBal">期初余额（元）</label><input id="cdOpenBal" type="number" inputmode="decimal" step="0.01" /></div></div>' +
+            '<div class="actions"><button class="btn primary" type="button" id="cdSetOpen">保存期初</button></div><div class="msg" id="cdMsg"></div></div>';
+        }
+        var txs = txsOf(sid);
+        var bal = num(card.openBalance);
+        var rows = txs.map(function (t) {
+          var after = "";
+          if (t.kind !== "adjustment") { bal += t.dir === "in" ? num(t.amount) : -num(t.amount); after = money(bal); }
+          else after = '<span class="badge warn">不计入余额</span>';
+          return "<tr><td>" + t.date + "</td><td>" + (t.kind === "adjustment" ? "在途/待查" : (t.dir === "in" ? "收入" : "支出")) + "</td><td>" + esc(t.category) + "</td><td>" + (t.dir === "in" ? "+" : "−") + money0(Math.abs(num(t.amount))) + "</td><td>" + after + "</td><td>" + esc(t.note || "") + '</td><td><button class="btn small danger" type="button" data-deltx="' + t.id + '">删</button></td></tr>';
+        }).join("");
+        var curBal = balanceAt(sid, null);
+        /* 月末对账 */
+        var cm = ui.cardMonth;
+        var sysEnd = balanceAt(sid, monthEndDate(cm));
+        var recon = db.recons[sid + "_" + cm];
+        var adjIn = 0, adjOut = 0;
+        txs.forEach(function (t) { if (t.kind === "adjustment" && t.date.slice(0, 7) === cm) { if (t.dir === "in") adjIn += num(t.amount); else adjOut += num(t.amount); } });
+        var reconHtml = "";
+        if (recon != null && sysEnd != null) {
+          var diff = num(recon) - sysEnd;
+          var explained = adjIn - adjOut;
+          var unexplained = diff - explained;
+          reconHtml = '<div class="tbl-wrap"><table><tbody>' +
+            "<tr><td>系统月末余额</td><td>" + money(sysEnd) + "</td></tr>" +
+            "<tr><td>银行卡实际余额（你填的）</td><td>" + money(num(recon)) + "</td></tr>" +
+            '<tr class="total"><td>对账差额（实际 − 系统）</td><td>' + money(diff) + "</td></tr>" +
+            "<tr><td>已被在途/待查项解释</td><td>" + money(explained) + "</td></tr>" +
+            '<tr class="total"><td>还没解释的差额（挂账）</td><td>' + money(unexplained) + "</td></tr></tbody></table></div>" +
+            (Math.abs(unexplained) < 0.005 ? '<p><span class="badge good">这个月对上了</span></p>' : '<p><span class="badge warn">还有 ' + money0(Math.abs(unexplained)) + " 没对上，挂账显示，不会抹平</span></p><p class=\"note-line\">常见原因：现金还没存进卡、外卖结算没到账、手续费、记错一笔。找到原因就补一笔流水或加一条在途/待查项。</p>");
+        } else {
+          reconHtml = '<p class="sub">月底把银行卡里的实际余额填进来，点保存，系统就算差额。</p>';
+        }
+        return head +
+          '<div class="kpis" style="grid-template-columns:repeat(2,1fr)">' + kpi("当前系统余额", money0(curBal), "期初 " + money0(card.openBalance) + "（" + card.openDate + "）") + kpi("本月流水", String(txs.filter(function (t) { return t.date.slice(0, 7) === cm; }).length) + " 笔", monthLabel(cm)) + "</div>" +
+          '<div class="card"><h2>记一笔流水</h2><div class="row">' +
+          '<div class="field"><label for="txDate">日期</label><input id="txDate" type="date" value="' + todayStr() + '" /></div>' +
+          '<div class="field"><label for="txDir">方向</label><select id="txDir"><option value="in">收入（钱进卡）</option><option value="out" selected>支出（钱出卡）</option></select></div>' +
+          '<div class="field"><label for="txKind">类型</label><select id="txKind"><option value="normal">正常流水</option><option value="adjustment">在途/待查（不计入余额，只解释对账差额）</option></select></div></div>' +
+          '<div class="row" style="margin-top:10px"><div class="field"><label for="txCat">类别</label><select id="txCat"></select></div>' +
+          '<div class="field"><label for="txAmt">金额（元）</label><input id="txAmt" type="number" inputmode="decimal" step="0.01" min="0" /></div>' +
+          '<div class="field"><label for="txNote">备注</label><input id="txNote" placeholder="比如：美团 11 月结算" /></div></div>' +
+          '<div class="actions"><button class="btn primary" type="button" id="txAdd">保存流水</button><button class="btn" type="button" id="cdExport">导出卡账单 CSV</button></div><div class="msg" id="txMsg"></div></div>' +
+          '<div class="card"><h2>流水明细</h2>' + (rows ? '<div class="tbl-wrap"><table><thead><tr><th>日期</th><th>方向</th><th>类别</th><th>金额</th><th>记账后余额</th><th>备注</th><th></th></tr></thead><tbody>' + rows + "</tbody></table></div>" : '<p class="sub">还没有流水。</p>') +
+          '<p class="note-line">期初：' + card.openDate + " · " + money(card.openBalance) + (card.tail ? " · 卡尾号 " + esc(card.tail) : "") + ' <button class="btn small" type="button" id="cdEditOpen">修改期初</button></p></div>' +
+          '<div class="card"><h2>月末对账</h2><div class="row">' + monthInputHtml("cdMonth", cm) +
+          '<div class="field"><label for="cdActual">银行卡实际月末余额（元）</label><input id="cdActual" type="number" inputmode="decimal" step="0.01" value="' + (recon != null ? esc(String(recon)) : "") + '" /></div>' +
+          '<div class="field"><label>&nbsp;</label><button class="btn primary" type="button" id="cdReconSave">保存并对账</button></div></div><div style="margin-top:12px">' + reconHtml + "</div></div>";
+      }
+      function fillTxCats() {
+        var dir = $("txDir").value;
+        var cats = dir === "in" ? CARD_IN : CARD_OUT;
+        $("txCat").innerHTML = cats.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join("");
+      }
+      function bindCard() {
+        var sid = curStoreId(); if (!sid) return;
+        var s = $("cdStore"); if (s) s.addEventListener("change", function () { ui.storeId = s.value; render(); });
+        var setOpen = $("cdSetOpen");
+        if (setOpen) {
+          setOpen.addEventListener("click", function () {
+            var d = $("cdOpenDate").value, b = $("cdOpenBal").value;
+            var msg = $("cdMsg");
+            if (!d || b === "") { msg.className = "msg err"; msg.textContent = "期初日期和期初余额都要填。"; return; }
+            db.cards[sid] = { openDate: d, openBalance: num(b), tail: $("cdTail").value.trim() };
+            save(); render();
+          });
+          return;
+        }
+        var dirSel = $("txDir"); if (dirSel) { fillTxCats(); dirSel.addEventListener("change", fillTxCats); }
+        var add = $("txAdd");
+        if (add) add.addEventListener("click", function () {
+          var amt = $("txAmt").value, msg = $("txMsg");
+          if (!$("txDate").value || amt === "" || num(amt) <= 0) { msg.className = "msg err"; msg.textContent = "日期和大于 0 的金额都要填。"; return; }
+          db.txs.push({ id: uid(), storeId: sid, date: $("txDate").value, dir: $("txDir").value, kind: $("txKind").value, category: $("txCat").value, amount: num(amt), note: $("txNote").value.trim(), createdAt: Date.now() });
+          save(); render();
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-deltx]"), function (b) {
+          b.addEventListener("click", function () { db.txs = db.txs.filter(function (t) { return t.id !== b.getAttribute("data-deltx"); }); save(); render(); });
+        });
+        var cm = $("cdMonth"); if (cm) cm.addEventListener("change", function () { if (cm.value) { ui.cardMonth = cm.value; render(); } });
+        var rs = $("cdReconSave");
+        if (rs) rs.addEventListener("click", function () {
+          var v = $("cdActual").value;
+          if (v === "") { delete db.recons[sid + "_" + ui.cardMonth]; } else db.recons[sid + "_" + ui.cardMonth] = num(v);
+          save(); render();
+        });
+        var eo = $("cdEditOpen");
+        if (eo) eo.addEventListener("click", function () {
+          var card = cardOf(sid); if (!card) return;
+          askValue("期初日期（YYYY-MM-DD）", card.openDate).then(function (nd) {
+            if (nd == null || !/^\d{4}-\d{2}-\d{2}$/.test(nd)) return;
+            askValue("期初余额（元）", String(card.openBalance)).then(function (nb) {
+              if (nb == null || nb === "") return;
+              card.openDate = nd; card.openBalance = num(nb); save(); render();
+            });
+          });
+        });
+        var ex = $("cdExport"); if (ex) ex.addEventListener("click", function () { openExport("卡账单", buildCardCsv()); });
+      }
+      /* 页面内简易输入弹窗（不用系统弹窗） */
+      function askValue(label, defVal) {
+        
+        var res = null;
+        var mask = document.createElement("div");
+        mask.className = "modal-mask open";
+        mask.innerHTML = '<div class="modal"><h3>' + esc(label) + '</h3><div class="field"><input id="psInput" value="' + esc(defVal) + '" /></div><div class="actions"><button class="btn primary" type="button" id="psOk">确定</button><button class="btn" type="button" id="psCancel">取消</button></div></div>';
+        document.body.appendChild(mask);
+        return new Promise(function (resolve) {
+          mask.querySelector("#psOk").addEventListener("click", function () { var val = mask.querySelector("#psInput").value; document.body.removeChild(mask); resolve(val); });
+          mask.querySelector("#psCancel").addEventListener("click", function () { document.body.removeChild(mask); resolve(null); });
+        });
+      }
+
+      /* ================= 人效 ================= */
+      function viewLabor() {
+        var sid = curStoreId();
+        if (!sid) return emptyStoreHtml();
+        var months = monthsWithData(sid);
+        var head = '<div class="card"><div class="row">' + storeSelectHtml("lbStore", sid) + "</div></div>";
+        if (!months.length) return head + '<div class="card empty"><p>还没有数据。先登记销售、再在「录入数据」补上每月的人数和总工时，这里就能看人效。</p></div>';
+        var rows = months.slice().reverse().map(function (m) {
+          var f = effMonth(sid, m), d = derived(f);
+          var over = d.laborRate != null && d.laborRate > num(db.settings.laborRateLimit) / 100;
+          return "<tr><td>" + monthLabel(m) + "</td><td>" + (f.headcount || "—") + "</td><td>" + (f.hours || "—") + "</td><td>" + money(f.sales) + "</td><td>" + money(f.wages) + "</td><td>" + (f.headcount ? money(f.sales / f.headcount) : "—") + "</td><td>" + (f.hours ? money(f.sales / f.hours) : "—") + "</td><td>" + (f.headcount ? money(f.wages / f.headcount) : "—") + "</td><td>" + pct(d.laborRate) + (over ? ' <span class="badge warn">超上限</span>' : "") + "</td></tr>";
+        }).join("");
+        var cur = effMonth(sid, ui.month), curD = derived(cur);
+        var note = "";
+        if (cur.hasData) {
+          if (curD.laborRate != null && curD.laborRate > num(db.settings.laborRateLimit) / 100) note = '<p class="conclusion">' + monthLabel(ui.month) + "人工成本率 " + pct(curD.laborRate) + "，超过上限 " + db.settings.laborRateLimit + "%。先对比一下：是工资涨了、销售掉了，还是人加多了——人数和工时在「录入数据」的月度记录里补全后判断更准。</p>";
+          else note = '<p class="conclusion">' + monthLabel(ui.month) + "人工成本率 " + pct(curD.laborRate) + "，在上限 " + db.settings.laborRateLimit + "% 以内。</p>";
+        }
+        return head + '<div class="card"><h2>人效</h2>' + note + '<div class="tbl-wrap"><table><thead><tr><th>月份</th><th>人数</th><th>总工时</th><th>销售收入</th><th>工资</th><th>人均销售额</th><th>每小时销售额</th><th>人均工资</th><th>人工成本率</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+          '<p class="note-line">人工成本率上限在「录入数据」里改，现在是 ' + db.settings.laborRateLimit + "%。</p></div>";
+      }
+      function bindLabor() { var s = $("lbStore"); if (s) s.addEventListener("change", function () { ui.storeId = s.value; render(); }); }
+
+      /* ================= 品项盈亏 ================= */
+      function viewProducts() {
+        var sid = curStoreId();
+        if (!sid) return emptyStoreHtml();
+        var month = ui.prodMonth;
+        var rows = db.products.filter(function (p) { return p.storeId === sid && p.month === month; })
+          .map(function (p) { var cost = num(p.qty) * num(p.unitCost); var profit = num(p.salesAmt) - cost; return { p: p, cost: cost, profit: profit, rate: num(p.salesAmt) ? profit / num(p.salesAmt) : null }; })
+          .sort(function (a, b) { return b.profit - a.profit; });
+        var head = '<div class="card"><div class="row">' + storeSelectHtml("prStore", sid) + monthInputHtml("prMonth", month) + "</div></div>";
+        if (!rows.length) return head + '<div class="card empty"><p>' + monthLabel(month) + ' 还没有品项数据。品项在「录入数据」里按月登记：品项名、销量、销售额、单位原料成本，这里自动算每个品项赚多少。</p><button class="btn primary" type="button" onclick="goTab(\'entry\')">去登记品项</button></div>';
+        var totalProfit = rows.reduce(function (a, r) { return a + r.profit; }, 0);
+        var losers = rows.filter(function (r) { return r.profit < 0; });
+        var tbl = '<div class="tbl-wrap"><table><thead><tr><th>品项</th><th>销量</th><th>销售额</th><th>原料成本</th><th>原料毛利</th><th>毛利率</th><th></th></tr></thead><tbody>' +
+          rows.map(function (r) { return "<tr><td>" + esc(r.p.name) + "</td><td>" + num(r.p.qty).toLocaleString("zh-CN") + "</td><td>" + money(num(r.p.salesAmt)) + "</td><td>" + money(r.cost) + "</td><td>" + money(r.profit) + "</td><td>" + pct(r.rate) + '</td><td><button class="btn small danger" type="button" data-delprod="' + r.p.id + '">删</button></td></tr>'; }).join("") +
+          '<tr class="total"><td>合计</td><td></td><td>' + money(rows.reduce(function (a, r) { return a + num(r.p.salesAmt); }, 0)) + "</td><td>" + money(rows.reduce(function (a, r) { return a + r.cost; }, 0)) + "</td><td>" + money(totalProfit) + "</td><td></td><td></td></tr></tbody></table></div>";
+        return head + '<div class="card"><h2>' + monthLabel(month) + ' 品项盈亏</h2><p class="conclusion">最赚钱的是' + esc(rows[0].p.name) + "，原料毛利 " + money0(rows[0].profit) + "。" + (losers.length ? "有 " + losers.length + " 个品项在亏： " + losers.map(function (r) { return esc(r.p.name); }).join("、") + "，先查销量和原料成本对不对得上。" : "这个月没有亏钱的品项。") + "</p>" + tbl +
+          '<p class="note-line">这里算的是原料毛利（销售额 − 销量 × 单位原料成本），还没分摊人工、水电、房租，和月利润表的口径不一样，别混着看。</p></div>';
+      }
+      function bindProducts() {
+        var s = $("prStore"); if (s) s.addEventListener("change", function () { ui.storeId = s.value; render(); });
+        var m = $("prMonth"); if (m) m.addEventListener("change", function () { if (m.value) { ui.prodMonth = m.value; render(); } });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-delprod]"), function (b) {
+          b.addEventListener("click", function () { db.products = db.products.filter(function (p) { return p.id !== b.getAttribute("data-delprod"); }); save(); render(); });
+        });
+      }
+
+      /* ================= 录入数据 ================= */
+      function viewEntry() {
+        var sid = curStoreId();
+        var rec = sid ? monthlyRec(sid, ui.entryMonth) : null;
+        var mv = function (k) { return rec && num(rec[k]) ? String(num(rec[k])) : ""; };
+        var monthFields = [
+          { key: "sales", label: "销售收入（整月）" }, { key: "purchaseCost", label: "进货成本" }, { key: "otherIncome", label: "其他收入" },
+          { key: "wages", label: "工资" }, { key: "rent", label: "房租" }, { key: "utilities", label: "水电" },
+          { key: "maintenance", label: "维修" }, { key: "hqFees", label: "总部费用（管理费等）" }, { key: "otherExpense", label: "其他支出" },
+          { key: "headcount", label: "人数" }, { key: "hours", label: "总工时（小时）" }
+        ];
+        var storeList = db.stores.length ? db.stores.map(function (s) {
+          return '<div class="bar-row" style="grid-template-columns:1fr auto"><span>' + esc(s.name) + '</span><span><button class="btn small danger" type="button" data-delstore="' + s.id + '">删除门店</button></span></div>';
+        }).join("") : '<p class="sub">还没有门店。</p>';
+        return '<div class="card"><h2>门店管理</h2>' + storeList +
+          '<div class="row" style="margin-top:10px"><div class="field"><label for="newStoreName">新门店名称</label><input id="newStoreName" placeholder="比如：示例店" /></div>' +
+          '<div class="field"><label>&nbsp;</label><button class="btn primary" type="button" id="addStore">添加门店</button></div></div><div class="msg" id="storeMsg"></div>' +
+          '<p class="note-line">删除门店会连它下面的登记、流水、品项一起删，删前想清楚。</p></div>' +
+          (sid ? '<div class="card"><h2>月度记录（补录整月）</h2><p class="sub">没有按天登记的月份，用这一张表把整月一次补上。注意：如果这个月已经有日登记，月利润表会按日登记汇总，这里的金额不会重复算，但人数、总工时会从这里取。</p>' +
+            '<div class="row">' + storeSelectHtml("enStore", sid) + monthInputHtml("enMonth", ui.entryMonth) + "</div>" +
+            (rec ? '<p style="margin-top:8px"><span class="badge good">这个月已有月度记录，保存会覆盖</span></p>' : "") +
+            '<div class="form-grid" style="margin-top:10px">' + monthFields.map(function (f) { return fieldNum("mf_" + f.key, f.label, mv(f.key)); }).join("") + "</div>" +
+            '<div class="actions"><button class="btn primary" type="button" id="saveMonthly">保存月度记录</button>' +
+            (rec ? '<button class="btn danger" type="button" id="delMonthly">删除这条月度记录</button>' : "") + '</div><div class="msg" id="mfMsg"></div></div>' : "") +
+          (sid ? '<div class="card"><h2>登记品项（按月）</h2><div class="row">' + monthInputHtml("pfMonth", ui.prodMonth) + "</div>" +
+            '<div class="form-grid" style="margin-top:10px"><div class="field"><label for="pfName">品项名称</label><input id="pfName" placeholder="比如：冰鲜柠檬水" /></div>' +
+            fieldNum("pfQty", "销量（杯/份）", "") + fieldNum("pfSales", "销售额（元）", "") + fieldNum("pfCost", "单位原料成本（元）", "") + "</div>" +
+            '<div class="actions"><button class="btn primary" type="button" id="addProduct">添加品项</button></div><div class="msg" id="pfMsg"></div></div>' : "") +
+          '<div class="card"><h2>设置与测试工具</h2>' +
+          '<div class="row"><div class="field"><label for="laborLimit">人工成本率上限（%）</label><input id="laborLimit" type="number" step="0.5" min="1" max="90" value="' + esc(String(db.settings.laborRateLimit)) + '" /></div>' +
+          '<div class="field"><label>&nbsp;</label><button class="btn" type="button" id="saveLimit">保存设置</button></div></div>' +
+          '<div class="actions"><button class="btn" type="button" id="restoreAug">恢复 8 月真实数据（万华城店）</button>' +
+          '<button class="btn" type="button" id="seedDemo">生成示例数据（一家示例店 · 两个月）</button>' +
+          '<button class="btn danger" type="button" id="wipeAll">清空全部数据</button></div>' +
+          '<p class="note-line">测试版预置的是万华城店 2026 年 8 月真实数据；清空或生成示例数据后，点「恢复 8 月真实数据」就能找回来（会覆盖万华城店现有的登记，其他门店不动）。示例数据是编的假数字，只用来试功能，店名带「示例」字样。清空会删掉这台设备上测试版的全部数据（账号会恢复成 111 / 222），正式版不受影响。</p><div class="msg" id="toolMsg"></div></div>';
+      }
+      function bindEntry() {
+        var add = $("addStore");
+        if (add) add.addEventListener("click", function () {
+          var name = $("newStoreName").value.trim(), msg = $("storeMsg");
+          if (!name) { msg.className = "msg err"; msg.textContent = "先填门店名称。"; return; }
+          var s = { id: uid(), name: name }; db.stores.push(s); ui.storeId = s.id; save(); render();
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-delstore]"), function (b) {
+          b.addEventListener("click", function () {
+            var id = b.getAttribute("data-delstore");
+            db.stores = db.stores.filter(function (s) { return s.id !== id; });
+            db.daily = db.daily.filter(function (d) { return d.storeId !== id; });
+            db.monthly = db.monthly.filter(function (r) { return r.storeId !== id; });
+            db.products = db.products.filter(function (p) { return p.storeId !== id; });
+            db.txs = db.txs.filter(function (t) { return t.storeId !== id; });
+            delete db.cards[id];
+            Object.keys(db.recons).forEach(function (k) { if (k.indexOf(id + "_") === 0) delete db.recons[k]; });
+            if (ui.storeId === id) ui.storeId = null;
+            save(); render();
+          });
+        });
+        var es = $("enStore"); if (es) es.addEventListener("change", function () { ui.storeId = es.value; render(); });
+        var em = $("enMonth"); if (em) em.addEventListener("change", function () { if (em.value) { ui.entryMonth = em.value; render(); } });
+        var sm = $("saveMonthly");
+        if (sm) sm.addEventListener("click", function () {
+          var sid = curStoreId(); if (!sid) return;
+          var keys = ["sales", "purchaseCost", "otherIncome", "wages", "rent", "utilities", "maintenance", "hqFees", "otherExpense", "headcount", "hours"];
+          var rec = { storeId: sid, month: ui.entryMonth };
+          keys.forEach(function (k) { rec[k] = num($("mf_" + k).value); });
+          var old = monthlyRec(sid, ui.entryMonth);
+          if (old) { rec.id = old.id; db.monthly = db.monthly.map(function (r) { return r.id === old.id ? rec : r; }); }
+          else { rec.id = uid(); db.monthly.push(rec); }
+          save(); render();
+          var msg = $("mfMsg"); if (msg) { msg.className = "msg ok"; msg.textContent = "月度记录已保存。"; }
+        });
+        var dm = $("delMonthly");
+        if (dm) dm.addEventListener("click", function () {
+          var sid = curStoreId(); var old = monthlyRec(sid, ui.entryMonth);
+          if (old) { db.monthly = db.monthly.filter(function (r) { return r.id !== old.id; }); save(); render(); }
+        });
+        var pm = $("pfMonth"); if (pm) pm.addEventListener("change", function () { if (pm.value) { ui.prodMonth = pm.value; render(); } });
+        var ap = $("addProduct");
+        if (ap) ap.addEventListener("click", function () {
+          var sid = curStoreId(); var msg = $("pfMsg");
+          var name = $("pfName").value.trim();
+          if (!sid || !name) { msg.className = "msg err"; msg.textContent = "先选门店、填品项名称。"; return; }
+          db.products.push({ id: uid(), storeId: sid, month: ui.prodMonth, name: name, qty: num($("pfQty").value), salesAmt: num($("pfSales").value), unitCost: num($("pfCost").value) });
+          save(); msg.className = "msg ok"; msg.textContent = "已添加，去「品项盈亏」页签看这个月的结果。"; $("pfName").value = ""; $("pfQty").value = ""; $("pfSales").value = ""; $("pfCost").value = "";
+        });
+        var sl = $("saveLimit");
+        if (sl) sl.addEventListener("click", function () { db.settings.laborRateLimit = num($("laborLimit").value) || 25; save(); var m = $("toolMsg"); m.className = "msg ok"; m.textContent = "已保存，人工成本率上限现在是 " + db.settings.laborRateLimit + "%。"; });
+        var ra = $("restoreAug");
+        if (ra) ra.addEventListener("click", function () { seedAugust(); save(); render(); var m = $("toolMsg"); if (m) { m.className = "msg ok"; m.textContent = "万华城店 8 月真实数据已恢复，去总览看 8 月报表。"; } });
+        var sd = $("seedDemo");
+        if (sd) sd.addEventListener("click", function () { seedDemo(); save(); render(); var m = $("toolMsg"); if (m) { m.className = "msg ok"; m.textContent = "示例数据已生成，去总览和各页签逛逛。"; } });
+        var wp = $("wipeAll");
+        if (wp) wp.addEventListener("click", function () {
+          var session = db.session;
+          db = blankDB(); db.session = session && db.users.some(function (u) { return u.id === session.userId; }) ? session : null;
+          ui.storeId = null; save(); render();
+        });
+      }
+      /* ================= 万华城店 2026 年 8 月真实数据（预置） ================= */
+      /* 数据来源：万华城店 2026 年 8 月营业额表、工资表与银行卡流水核对结果；日登记按归属月口径（工资、水电记在归属月月末）。 */
+      var AUG_DAILY = [
+        { date:"2026-08-01", salesCash:205, salesWechat:1676.8, salesAlipay:437.7, salesMiniprogram:2804.27, salesMeituan:1350.75, salesEleme:1254.33, salesJd:195.8, salesGroupbuy:535.22, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"7月电费6802.59已记在7月（归属月）" },
+        { date:"2026-08-02", salesCash:95.9, salesWechat:1575.6, salesAlipay:357.6, salesMiniprogram:3147.84, salesMeituan:1535.67, salesEleme:1262.07, salesJd:271.1, salesGroupbuy:483.59, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:850, orderCount:0, note:"礼金850" },
+        { date:"2026-08-03", salesCash:189, salesWechat:1350, salesAlipay:420.5, salesMiniprogram:2594.34, salesMeituan:1262.23, salesEleme:1088.37, salesJd:218.78, salesGroupbuy:446.74, salesOtherChannel:0, purchaseCost:12593, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"燕麦爆爆珠等12593" },
+        { date:"2026-08-04", salesCash:106, salesWechat:1349, salesAlipay:409.3, salesMiniprogram:2764.84, salesMeituan:1070.36, salesEleme:1148.39, salesJd:285.76, salesGroupbuy:482.96, salesOtherChannel:0, purchaseCost:336, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"周边产品336" },
+        { date:"2026-08-05", salesCash:126.9, salesWechat:998.9, salesAlipay:421.3, salesMiniprogram:2295.43, salesMeituan:1051.16, salesEleme:1106.89, salesJd:253.47, salesGroupbuy:449.13, salesOtherChannel:0, purchaseCost:11545, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"圆形芋圆等11545" },
+        { date:"2026-08-06", salesCash:98, salesWechat:1312.2, salesAlipay:380, salesMiniprogram:2295.79, salesMeituan:1140.3, salesEleme:1082.41, salesJd:189.47, salesGroupbuy:502.77, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:100, orderCount:0, note:"外卖推广费100" },
+        { date:"2026-08-07", salesCash:146, salesWechat:1870.4, salesAlipay:591.3, salesMiniprogram:2637.44, salesMeituan:2263.42, salesEleme:2151.27, salesJd:221.65, salesGroupbuy:642.87, salesOtherChannel:0, purchaseCost:11429, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:513.62, orderCount:0, note:"晶球等11429，抽纸113.62，员工聚餐400" },
+        { date:"2026-08-08", salesCash:87, salesWechat:726.7, salesAlipay:264, salesMiniprogram:1552.19, salesMeituan:1113.82, salesEleme:885.27, salesJd:301.87, salesGroupbuy:220.83, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"" },
+        { date:"2026-08-09", salesCash:0, salesWechat:0, salesAlipay:0, salesMiniprogram:0, salesMeituan:0, salesEleme:0, salesJd:0, salesGroupbuy:0, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"营业额表当日为0（闭店或漏记待确认）" },
+        { date:"2026-08-10", salesCash:111, salesWechat:944.9, salesAlipay:256.8, salesMiniprogram:1762.73, salesMeituan:14.16, salesEleme:13.28, salesJd:11.5, salesGroupbuy:188.21, salesOtherChannel:0, purchaseCost:12585, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"双倍保温袋等12585" },
+        { date:"2026-08-11", salesCash:88, salesWechat:1021.5, salesAlipay:244.9, salesMiniprogram:1983.36, salesMeituan:787.03, salesEleme:1051.37, salesJd:94.1, salesGroupbuy:194.08, salesOtherChannel:0, purchaseCost:352.88, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"周边产品352.88" },
+        { date:"2026-08-12", salesCash:181.5, salesWechat:1121.3, salesAlipay:366.6, salesMiniprogram:1861.4, salesMeituan:1103.17, salesEleme:995.5, salesJd:233.62, salesGroupbuy:275.74, salesOtherChannel:0, purchaseCost:11227, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:45.9, orderCount:0, note:"晶球等11227，保鲜膜24.4订书钉21.5" },
+        { date:"2026-08-13", salesCash:127, salesWechat:890.8, salesAlipay:302.2, salesMiniprogram:1753.66, salesMeituan:1123.81, salesEleme:860.89, salesJd:136.65, salesGroupbuy:183.5, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"7月水费702.78已记在7月（归属月）" },
+        { date:"2026-08-14", salesCash:398.5, salesWechat:1121.3, salesAlipay:310.4, salesMiniprogram:2429.41, salesMeituan:1442.83, salesEleme:1209.62, salesJd:150.64, salesGroupbuy:346.05, salesOtherChannel:0, purchaseCost:9815, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:20, orderCount:0, note:"鲜橙等9815，打印20" },
+        { date:"2026-08-15", salesCash:94.9, salesWechat:906.8, salesAlipay:309.5, salesMiniprogram:2004.64, salesMeituan:1262.87, salesEleme:1306.16, salesJd:211.33, salesGroupbuy:55.92, salesOtherChannel:0, purchaseCost:339.12, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"周边产品339.12；7月工资44122已记在7月（归属月）" },
+        { date:"2026-08-16", salesCash:91.9, salesWechat:1088.1, salesAlipay:531.4, salesMiniprogram:2849.29, salesMeituan:1435.51, salesEleme:1227.5, salesJd:256.47, salesGroupbuy:336.58, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:369, orderCount:0, note:"报销健康证3个369" },
+        { date:"2026-08-17", salesCash:153, salesWechat:1034.3, salesAlipay:305.6, salesMiniprogram:1984.38, salesMeituan:1365.97, salesEleme:1008.38, salesJd:166.88, salesGroupbuy:494.35, salesOtherChannel:0, purchaseCost:9331, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"鲜橙等9331" },
+        { date:"2026-08-18", salesCash:108.9, salesWechat:1167.9, salesAlipay:261, salesMiniprogram:2549.7, salesMeituan:1380.49, salesEleme:1052.65, salesJd:244.13, salesGroupbuy:278.48, salesOtherChannel:0, purchaseCost:304, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"周边产品304" },
+        { date:"2026-08-19", salesCash:233, salesWechat:1008.7, salesAlipay:473.4, salesMiniprogram:2629.8, salesMeituan:1530.92, salesEleme:1038.02, salesJd:214.38, salesGroupbuy:358.35, salesOtherChannel:0, purchaseCost:9564, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:65.9, orderCount:0, note:"晶球等9564，打印26丁晴手套39.9" },
+        { date:"2026-08-20", salesCash:554, salesWechat:959.5, salesAlipay:479.4, salesMiniprogram:2185.35, salesMeituan:1265.8, salesEleme:937.2, salesJd:315.76, salesGroupbuy:328.51, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:49, hqFees:0, otherExpense:0, orderCount:0, note:"消防水管49" },
+        { date:"2026-08-21", salesCash:94.5, salesWechat:616.2, salesAlipay:338.3, salesMiniprogram:2102.64, salesMeituan:1250.59, salesEleme:1078.97, salesJd:342.36, salesGroupbuy:268.81, salesOtherChannel:0, purchaseCost:9266, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"柠檬等9266" },
+        { date:"2026-08-22", salesCash:103, salesWechat:1035, salesAlipay:304, salesMiniprogram:1993.43, salesMeituan:1574.29, salesEleme:942.19, salesJd:311.38, salesGroupbuy:254.86, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:100, orderCount:0, note:"外卖推广费100" },
+        { date:"2026-08-23", salesCash:70.8, salesWechat:836.1, salesAlipay:153.5, salesMiniprogram:1662.29, salesMeituan:1123.81, salesEleme:962.76, salesJd:293.32, salesGroupbuy:420.36, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"" },
+        { date:"2026-08-24", salesCash:61, salesWechat:1066.75, salesAlipay:311.5, salesMiniprogram:2136.45, salesMeituan:1391.88, salesEleme:948.52, salesJd:394.28, salesGroupbuy:309.91, salesOtherChannel:0, purchaseCost:9232, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"立式扫码器等9232" },
+        { date:"2026-08-25", salesCash:180, salesWechat:1007.5, salesAlipay:405.8, salesMiniprogram:2297.79, salesMeituan:1327.18, salesEleme:919.25, salesJd:256.6, salesGroupbuy:361.89, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"" },
+        { date:"2026-08-26", salesCash:305, salesWechat:1069.35, salesAlipay:355, salesMiniprogram:2837.28, salesMeituan:1921.31, salesEleme:1335.55, salesJd:275.6, salesGroupbuy:442.59, salesOtherChannel:0, purchaseCost:9252, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"U型杯等9252" },
+        { date:"2026-08-27", salesCash:73.9, salesWechat:1127.4, salesAlipay:350.4, salesMiniprogram:2409.01, salesMeituan:917.94, salesEleme:797.7, salesJd:164.05, salesGroupbuy:393.37, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:13.59, orderCount:0, note:"收纳盒轧带等13.59" },
+        { date:"2026-08-28", salesCash:69, salesWechat:718.25, salesAlipay:293.4, salesMiniprogram:2130.06, salesMeituan:749.92, salesEleme:861.43, salesJd:155.24, salesGroupbuy:410.02, salesOtherChannel:0, purchaseCost:8565, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"晶球等8565" },
+        { date:"2026-08-29", salesCash:31, salesWechat:866.7, salesAlipay:323.4, salesMiniprogram:2222.83, salesMeituan:1247.04, salesEleme:945.87, salesJd:327.57, salesGroupbuy:290.91, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:100, orderCount:0, note:"外卖推广费100" },
+        { date:"2026-08-30", salesCash:61.9, salesWechat:973.5, salesAlipay:256.3, salesMiniprogram:3032.25, salesMeituan:1437.58, salesEleme:1174.05, salesJd:255.6, salesGroupbuy:417.12, salesOtherChannel:0, purchaseCost:0, otherIncome:0, wages:0, rent:0, utilities:0, maintenance:0, hqFees:0, otherExpense:0, orderCount:0, note:"" },
+        { date:"2026-08-31", salesCash:462.9, salesWechat:947.5, salesAlipay:381.3, salesMiniprogram:2029.41, salesMeituan:1282.16, salesEleme:1212.06, salesJd:341.75, salesGroupbuy:441.86, salesOtherChannel:0, purchaseCost:8890, otherIncome:0, wages:40447.61, rent:7816.67, utilities:7218.54, maintenance:0, hqFees:1316.67, otherExpense:116.06, orderCount:0, note:"双杯保温袋等8890；月末归属：8月工资40447.61（9/15发放）、8月电费6484.82+水费733.72（9月缴纳）、房租摊销7816.67（年租93800/12）、管理费摊销1316.67（年费15800/12)、微信支付宝手续费116.06" }
+      ];
+      /* 载入万华城店 8 月真实数据：门店 + 月度记录 + 31 天日登记 + 银行卡期初（尾号 927196，8 月 1 日期初 129172.20）。重复调用会先清掉旧的万华城店数据再重建，可安全用来恢复。 */
+      function seedAugust() {
+        var sid = "1";
+        db.stores = db.stores.filter(function (s) { return s.id !== sid; });
+        db.daily = db.daily.filter(function (d) { return d.storeId !== sid; });
+        db.monthly = db.monthly.filter(function (r) { return r.storeId !== sid; });
+        db.products = db.products.filter(function (p) { return p.storeId !== sid; });
+        db.txs = db.txs.filter(function (t) { return t.storeId !== sid; });
+        delete db.cards[sid];
+        Object.keys(db.recons).forEach(function (k) { if (k.indexOf(sid + "_") === 0) delete db.recons[k]; });
+        db.stores.push({ id: sid, name: "万华城店" });
+        db.monthly.push({ id: "aug2026monthly", storeId: sid, month: "2026-08", sales: 204005.07, purchaseCost: 134626, otherIncome: 0, wages: 40447.61, rent: 7816.67, utilities: 7218.54, maintenance: 49, hqFees: 1316.67, otherExpense: 2178.01, headcount: 12, hours: 1833.6 });
+        AUG_DAILY.forEach(function (d, i) {
+          var rec = { id: "aug2026d" + (i + 1), storeId: sid };
+          Object.keys(d).forEach(function (k) { rec[k] = d[k]; });
+          db.daily.push(rec);
+        });
+        db.cards[sid] = { openDate: "2026-08-01", openBalance: 129172.2, tail: "927196" };
+        ui.storeId = sid;
+        ui.month = "2026-08"; ui.dailyMonth = "2026-08"; ui.cardMonth = "2026-08"; ui.entryMonth = "2026-08"; ui.prodMonth = "2026-08";
+      }
+
+      /* 示例数据：明确标注的假数据，仅供试功能 */
+      function seedDemo() {
+        var sid = uid();
+        db.stores.push({ id: sid, name: "示例店（假数据）" });
+        ui.storeId = sid;
+        var m1 = prevMonth(curMonth()), m2 = curMonth();
+        db.monthly.push({ id: uid(), storeId: sid, month: m1, sales: 186500, purchaseCost: 118200, otherIncome: 800, wages: 36400, rent: 7800, utilities: 6950, maintenance: 320, hqFees: 1320, otherExpense: 2100, headcount: 11, hours: 1980 });
+        var base = [8200, 7900, 8600, 9100, 7800, 8400, 10200, 9800, 8100, 7600, 8300, 8900, 9500, 8800, 8000, 7700, 8500, 9200, 9900, 8600, 8100, 7900, 8400, 9000, 8700, 8200, 7800, 8600, 9300, 8900];
+        base.forEach(function (total, i) {
+          var day = { id: uid(), storeId: sid, date: m2 + "-" + pad2(i + 1), note: i === 29 ? "示例：整月工资记在月末" : "" };
+          var mini = Math.round(total * 0.34), del = Math.round(total * 0.31), dine = total - mini - del;
+          day.salesMiniprogram = mini; day.salesMeituan = Math.round(del * 0.62); day.salesEleme = del - day.salesMeituan;
+          day.salesCash = Math.round(dine * 0.3); day.salesWechat = Math.round(dine * 0.42); day.salesAlipay = dine - day.salesCash - day.salesWechat;
+          day.salesJd = 0; day.salesGroupbuy = 0; day.salesOtherChannel = 0;
+          day.purchaseCost = Math.round(total * 0.63); day.otherIncome = 0;
+          day.wages = i === 29 ? 35800 : 0; day.rent = i === 29 ? 7800 : 0; day.utilities = i === 29 ? 7120 : 0;
+          day.maintenance = i === 12 ? 260 : 0; day.hqFees = i === 29 ? 1320 : 0; day.otherExpense = i === 29 ? 1980 : (i % 9 === 4 ? 120 : 0);
+          day.orderCount = Math.round(total / 13);
+          db.daily.push(day);
+        });
+        db.products.push(
+          { id: uid(), storeId: sid, month: m2, name: "冰鲜柠檬水", qty: 9200, salesAmt: 36800, unitCost: 1.35 },
+          { id: uid(), storeId: sid, month: m2, name: "珍珠奶茶", qty: 5400, salesAmt: 43200, unitCost: 3.1 },
+          { id: uid(), storeId: sid, month: m2, name: "雪王大圣代", qty: 3100, salesAmt: 18600, unitCost: 2.6 },
+          { id: uid(), storeId: sid, month: m2, name: "示例滞销品", qty: 260, salesAmt: 2080, unitCost: 9.4 }
+        );
+        db.cards[sid] = { openDate: m2 + "-01", openBalance: 52300, tail: "0000" };
+        db.txs.push(
+          { id: uid(), storeId: sid, date: m2 + "-02", dir: "in", kind: "normal", category: "外卖结算", amount: 12400, note: "示例流水", createdAt: 1 },
+          { id: uid(), storeId: sid, date: m2 + "-05", dir: "out", kind: "normal", category: "进货付款", amount: 28600, note: "示例流水", createdAt: 2 },
+          { id: uid(), storeId: sid, date: m2 + "-09", dir: "in", kind: "adjustment", category: "外卖结算", amount: 3150, note: "示例：在途，钱已进卡未记账", createdAt: 3 }
+        );
+        ui.month = m2; ui.dailyMonth = m2; ui.cardMonth = m2; ui.prodMonth = m2; ui.entryMonth = m2;
+      }
+
+      /* ================= 账号 ================= */
+      function viewAccount() {
+        var user = currentUser();
+        var adminHtml = "";
+        if (user.role === "admin") {
+          adminHtml = '<div class="card"><h2>账号管理（管理员）</h2>' +
+            db.users.map(function (u) {
+              return '<div class="bar-row" style="grid-template-columns:1fr auto auto"><span>' + esc(u.username) + " · " + (u.role === "admin" ? "管理员" : "普通用户") + (u.active ? "" : ' · <span class="badge warn">已停用</span>') + "</span>" +
+                '<span><button class="btn small" type="button" data-resetpw="' + u.id + '">重置密码</button></span>' +
+                '<span><button class="btn small" type="button" data-toggleuser="' + u.id + '">' + (u.active ? "停用" : "启用") + "</button></span></div>";
+            }).join("") +
+            '<h3 style="margin-top:14px">新建账号</h3><div class="row"><div class="field"><label for="nuName">账号（名字）</label><input id="nuName" /></div>' +
+            '<div class="field"><label for="nuPass">密码</label><input id="nuPass" /></div>' +
+            '<div class="field"><label for="nuRole">角色</label><select id="nuRole"><option value="user">普通用户</option><option value="admin">管理员</option></select></div>' +
+            '<div class="field"><label>&nbsp;</label><button class="btn primary" type="button" id="nuAdd">新建</button></div></div><div class="msg" id="nuMsg"></div>' +
+            '<p class="note-line">测试版账号密码就存在这台设备的浏览器里，别拿真实密码来试。重置密码是把密码改成你输入的新值，不会自动乱改。</p></div>';
+        }
+        return '<div class="card"><h2>我的账号</h2><p class="sub">账号：<b>' + esc(user.username) + "</b> · " + (user.role === "admin" ? "管理员" : "普通用户") + '</p>' +
+          '<h3>改自己的密码</h3><div class="row"><div class="field"><label for="pwOld">旧密码</label><input id="pwOld" type="password" /></div>' +
+          '<div class="field"><label for="pwNew">新密码</label><input id="pwNew" type="password" /></div>' +
+          '<div class="field"><label>&nbsp;</label><button class="btn primary" type="button" id="pwChange">保存新密码</button></div></div><div class="msg" id="pwMsg"></div></div>' + adminHtml;
+      }
+      function bindAccount() {
+        var pc = $("pwChange");
+        if (pc) pc.addEventListener("click", function () {
+          var user = currentUser(), msg = $("pwMsg");
+          if ($("pwOld").value !== user.password) { msg.className = "msg err"; msg.textContent = "旧密码不对。"; return; }
+          if (!$("pwNew").value) { msg.className = "msg err"; msg.textContent = "新密码不能为空。"; return; }
+          user.password = $("pwNew").value; save(); msg.className = "msg ok"; msg.textContent = "密码已改，下次用新密码登录。";
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-toggleuser]"), function (b) {
+          b.addEventListener("click", function () {
+            var u = db.users.find(function (x) { return x.id === b.getAttribute("data-toggleuser"); });
+            if (u) { u.active = !u.active; save(); render(); }
+          });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-resetpw]"), function (b) {
+          b.addEventListener("click", function () {
+            var u = db.users.find(function (x) { return x.id === b.getAttribute("data-resetpw"); });
+            if (!u) return;
+            askValue("给账号 " + u.username + " 设置新密码", u.password).then(function (v) {
+              if (v != null && v !== "") { u.password = v; save(); render(); }
+            });
+          });
+        });
+        var na = $("nuAdd");
+        if (na) na.addEventListener("click", function () {
+          var msg = $("nuMsg"), name = $("nuName").value.trim(), pass = $("nuPass").value;
+          if (!name || !pass) { msg.className = "msg err"; msg.textContent = "账号和密码都要填。"; return; }
+          if (db.users.some(function (u) { return u.username === name; })) { msg.className = "msg err"; msg.textContent = "这个账号已经有了。"; return; }
+          db.users.push({ id: uid(), username: name, password: pass, role: $("nuRole").value, active: true });
+          save(); render();
+        });
+      }
+
+      /* ================= 导出 CSV ================= */
+      function csvCell(v) { var s = String(v == null ? "" : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+      function toCsv(rows) { return "﻿" + rows.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n"); }
+      function buildMonthlyCsv() {
+        var rows = [["门店", "月份", "数据来源", "销售收入", "进货成本", "毛利", "毛利率%", "其他收入", "工资", "房租", "水电", "维修", "总部费用", "其他支出", "净利润", "净利率%", "人工成本率%", "人数", "总工时"]];
+        db.stores.forEach(function (s) {
+          monthsWithData(s.id).forEach(function (m) {
+            var f = effMonth(s.id, m), d = derived(f);
+            rows.push([s.name, m, f.source, r2(f.sales), r2(f.purchaseCost), r2(d.gross), pc(d.grossRate), r2(f.otherIncome), r2(f.wages), r2(f.rent), r2(f.utilities), r2(f.maintenance), r2(f.hqFees), r2(f.otherExpense), r2(d.net), pc(d.netRate), pc(d.laborRate), f.headcount || "", f.hours || ""]);
+          });
+        });
+        return toCsv(rows);
+      }
+      function buildDailyCsv() {
+        var head = ["门店", "日期"].concat(CHANNELS.map(function (c) { return c.label; })).concat(EXPENSES.map(function (e) { return e.label; })).concat(["其他收入", "订单量", "备注"]);
+        var rows = [head];
+        db.stores.forEach(function (s) {
+          db.daily.filter(function (d) { return d.storeId === s.id; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (d) {
+            var r = [s.name, d.date];
+            CHANNELS.forEach(function (c) { r.push(r2(num(d[c.key]))); });
+            EXPENSES.forEach(function (e) { r.push(r2(num(d[e.key]))); });
+            r.push(r2(num(d.otherIncome)), num(d.orderCount) || "", d.note || "");
+            rows.push(r);
+          });
+        });
+        return toCsv(rows);
+      }
+      function buildCardCsv() {
+        var rows = [["门店", "卡尾号", "期初日期", "期初余额", "日期", "方向", "类型", "类别", "金额", "记账后余额", "备注"]];
+        db.stores.forEach(function (s) {
+          var card = cardOf(s.id); if (!card) return;
+          var bal = num(card.openBalance);
+          txsOf(s.id).forEach(function (t) {
+            var after = "";
+            if (t.kind !== "adjustment") { bal += t.dir === "in" ? num(t.amount) : -num(t.amount); after = r2(bal); }
+            rows.push([s.name, card.tail || "", card.openDate, r2(num(card.openBalance)), t.date, t.kind === "adjustment" ? "在途/待查" : (t.dir === "in" ? "收入" : "支出"), t.kind === "adjustment" ? "不计入余额" : "正常流水", t.category, r2(num(t.amount)), after, t.note || ""]);
+          });
+        });
+        return toCsv(rows);
+      }
+      function buildAnalysisCsv() {
+        var rows = [["门店", "月份", "板块", "结论"]];
+        db.stores.forEach(function (s) {
+          monthsWithData(s.id).forEach(function (m) {
+            var f = effMonth(s.id, m), d = derived(f), pf = effMonth(s.id, prevMonth(m)), pd = derived(pf);
+            rows.push([s.name, m, "总览", overviewConclusion(s.id, m, f, d, pf, pd)]);
+            rows.push([s.name, m, "人工", laborConclusion(f, d)]);
+            rows.push([s.name, m, "水电", utilConclusion(f, d, pf, pd)]);
+            rows.push([s.name, m, "进货与毛利", grossConclusion(f, d, pf, pd)]);
+          });
+        });
+        return toCsv(rows);
+      }
+      function r2(n) { return Math.round(num(n) * 100) / 100; }
+      function pc(rate) { return rate == null ? "" : Math.round(rate * 1000) / 10; }
+
+      /* 导出弹窗：下载 + 复制兜底（手机浏览器拦下载时用复制） */
+      var exportState = { name: "", content: "" };
+      function openExport(name, content) {
+        exportState = { name: name, content: content };
+        $("exportTitle").textContent = "导出：" + name + "（共 " + (content.split("\n").length - 1) + " 行数据）";
+        $("exportText").value = content;
+        $("exportMsg").textContent = ""; $("exportMsg").className = "msg";
+        $("exportMask").classList.add("open");
+      }
+      function downloadCsv() {
+        var blob = new Blob([exportState.content], { type: "text/csv;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url; a.download = exportState.name + "-" + todayStr() + ".csv";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        var msg = $("exportMsg"); msg.className = "msg ok";
+        msg.textContent = "已开始下载。如果在手机上没找到文件，点「复制全部内容」粘贴到 Excel 或备忘录里，效果一样。";
+      }
+      function copyExport() {
+        var ta = $("exportText"), msg = $("exportMsg");
+        function done() { msg.className = "msg ok"; msg.textContent = "已复制，去 Excel 里粘贴就能用。"; }
+        function fallback() {
+          ta.focus(); ta.select();
+          try { document.execCommand("copy"); done(); }
+          catch (e) { msg.className = "msg err"; msg.textContent = "自动复制没成，请长按文本框全选后手动复制。"; }
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, fallback);
+        else fallback();
+      }
+
+      /* ================= 登录与初始化 ================= */
+      function doLogin(username, password) {
+        var u = db.users.find(function (x) { return x.username === username && x.password === password; });
+        var msg = $("loginMsg");
+        if (!u) { msg.textContent = "账号或密码不对。测试账号：管理员 111/111，普通用户 222/222。"; return false; }
+        if (!u.active) { msg.textContent = "这个账号被停用了，找管理员启用。"; return false; }
+        db.session = { userId: u.id }; save(); render(); return true;
+      }
+      function init() {
+        var isFirstOpen = false;
+        try { isFirstOpen = !localStorage.getItem(LS_KEY); } catch (e) {}
+        load();
+        if (isFirstOpen) { seedAugust(); save(); }
+        $("quickAdmin").addEventListener("click", function () { doLogin("111", "111"); });
+        $("quickUser").addEventListener("click", function () { doLogin("222", "222"); });
+        $("loginBtn").addEventListener("click", function () { doLogin($("loginUser").value.trim(), $("loginPass").value); });
+        $("loginPass").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin($("loginUser").value.trim(), $("loginPass").value); });
+        $("logoutBtn").addEventListener("click", function () { db.session = null; save(); render(); });
+        $("exportDownload").addEventListener("click", downloadCsv);
+        $("exportCopy").addEventListener("click", copyExport);
+        $("exportClose").addEventListener("click", function () { $("exportMask").classList.remove("open"); });
+        $("exportMask").addEventListener("click", function (e) { if (e.target === $("exportMask")) $("exportMask").classList.remove("open"); });
+        render();
+      }
+      init();
+    </script>
+  </body>
+</html>
